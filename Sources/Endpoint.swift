@@ -89,29 +89,34 @@ private extension Endpoint {
 #endif
 
       return request
-    }.publisher.eraseToAnyPublisher()
+    }
+    .publisher
+    .eraseToAnyPublisher()
   }
 }
 
 private extension URLRequest {
   func responsePublisher(using session: URLSession = .shared) -> AnyPublisher<Data, Error> {
-    session.dataTaskPublisher(for: self).tryMap { output in
-      guard let httpResponse = output.response as? HTTPURLResponse else {
-        throw URLError(.badServerResponse)
-      }
+    session
+      .dataTaskPublisher(for: self)
+      .tryMap { output in
+        guard let httpResponse = output.response as? HTTPURLResponse else {
+          throw URLError(.badServerResponse)
+        }
 
-      let statusCode = httpResponse.statusCode
+        let statusCode = httpResponse.statusCode
 
 #if DEBUG
-      print("\(statusCode) \(self): \(output.data.jsonString)")
+        print("\(statusCode) \(self): \(output.data.jsonString)")
 #endif
 
-      guard 200 ..< 300 ~= statusCode else {
-        throw HTTPError(statusCode: statusCode)
-      }
+        guard 200 ..< 300 ~= statusCode else {
+          throw HTTPError(statusCode: statusCode)
+        }
 
-      return output.data
-    }.eraseToAnyPublisher()
+        return output.data
+      }
+      .eraseToAnyPublisher()
   }
 }
 
@@ -126,9 +131,12 @@ public extension Endpoint where Response: Decodable {
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Response, Error> {
-    requestPublisher(bearerToken: bearerToken).flatMap { request in
-      request.responsePublisher(using: session)
-    }.decode(type: Response.self, decoder: jsonDecoder).eraseToAnyPublisher()
+    requestPublisher(bearerToken: bearerToken)
+      .flatMap { request in
+        request.responsePublisher(using: session)
+      }
+      .decode(type: Response.self, decoder: jsonDecoder)
+      .eraseToAnyPublisher()
   }
 }
 
@@ -137,8 +145,11 @@ public extension Endpoint where Response == Void {
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Void, Error> {
-    requestPublisher(bearerToken: bearerToken).flatMap { request in
-      request.responsePublisher(using: session)
-    }.map { _ in () }.eraseToAnyPublisher()
+    requestPublisher(bearerToken: bearerToken)
+      .flatMap { request in
+        request.responsePublisher(using: session)
+      }
+      .map { _ in () }
+      .eraseToAnyPublisher()
   }
 }
