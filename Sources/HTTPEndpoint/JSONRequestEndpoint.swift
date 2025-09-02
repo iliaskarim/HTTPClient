@@ -3,6 +3,8 @@ import Foundation
 public protocol JSONRequestEndpoint: Endpoint {
   associatedtype Request
 
+  static var encodingStrategies: [EncodingStrategy] { get }
+
   var request: Request { get }
 }
 
@@ -21,6 +23,10 @@ public extension JSONRequestEndpoint {
 
 public extension JSONRequestEndpoint where Request: Encodable {
   func httpBody() throws -> Data? {
-    try JSONEncoder().encode(request)
+    let jsonEncoder = Self.encodingStrategies.reduce(into: JSONEncoder()) { encoder, strategy in
+      strategy.apply(to: encoder)
+    }
+
+    return try jsonEncoder.encode(request)
   }
 }
