@@ -17,8 +17,6 @@ private extension Data {
 public protocol Endpoint {
   associatedtype Response
 
-  static var decodingStrategies: [DecodingStrategy] { get }
-
   var httpHeaderFields: [String: String] { get }
 
   var httpMethod: String { get }
@@ -127,15 +125,16 @@ public extension Endpoint where Response: Decodable {
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Response, Error> {
-    let jsonDecoder = Self.decodingStrategies.reduce(into: JSONDecoder()) { decoder, strategy in
-      strategy.apply(to: decoder)
-    }
+    let decoder = ((Response.self as? CustomDecodable.Type)?.decodingStrategies ?? [])
+      .reduce(into: JSONDecoder()) { decoder, strategy in
+        strategy.apply(to: decoder)
+      }
 
     return requestPublisher(bearerToken: bearerToken)
       .flatMap { request in
         request.responsePublisher(using: session)
       }
-      .decode(type: Response.self, decoder: jsonDecoder)
+      .decode(type: Response.self, decoder: decoder)
       .eraseToAnyPublisher()
   }
 }
