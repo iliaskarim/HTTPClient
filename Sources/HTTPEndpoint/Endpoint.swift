@@ -1,19 +1,6 @@
 import Combine
 import Foundation
 
-#if DEBUG
-private extension Data {
-  var jsonString: String {
-    guard let object = try? JSONSerialization.jsonObject(with: self),
-          let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted) else {
-      return .init(data: self, encoding: .utf8)!
-    }
-
-    return .init(data: data, encoding: .utf8)!
-  }
-}
-#endif
-
 public protocol Endpoint {
   associatedtype Response
 
@@ -80,13 +67,7 @@ private extension Endpoint {
         request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
       }
 
-#if DEBUG
-      if let httpBody = request.httpBody {
-        print("\(request.httpMethod!) \(request): \(httpBody.jsonString)")
-      } else {
-        print("\(request.httpMethod!) \(request)")
-      }
-#endif
+      Logger.shared.logRequest(request)
 
       return request
     }
@@ -106,9 +87,7 @@ private extension URLRequest {
 
         let statusCode = httpResponse.statusCode
 
-#if DEBUG
-        print("\(statusCode) \(self): \(output.data.jsonString)")
-#endif
+        Logger.shared.logResponse(httpResponse.statusCode, data: output.data, for: self)
 
         guard 200 ..< 300 ~= statusCode else {
           throw HTTPError(statusCode: statusCode)
@@ -148,7 +127,7 @@ public extension Endpoint where Response == Void {
       .flatMap { request in
         request.responsePublisher(using: session)
       }
-      .map { _ in () }
+      .map { _ in }
       .eraseToAnyPublisher()
   }
 }
