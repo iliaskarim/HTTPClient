@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import HTTPEndpoint
+@testable import HTTPClient
 
 @Test func testSnakeCaseKeyEncodingStrategy() async throws {
   let encoder = JSONEncoder()
