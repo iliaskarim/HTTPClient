@@ -90,7 +90,11 @@ private extension URLRequest {
         Logger.shared.logResponse(httpResponse.statusCode, data: output.data, for: self)
 
         guard 200 ..< 300 ~= statusCode else {
-          throw HTTPError(statusCode: statusCode)
+          guard let apiError = try? JSONDecoder().decode(APIError.self, from: output.data) else {
+            throw HTTPError(statusCode: statusCode)
+          }
+
+          throw apiError
         }
 
         return output.data
