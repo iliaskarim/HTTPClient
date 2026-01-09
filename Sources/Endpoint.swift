@@ -28,6 +28,10 @@ public extension Endpoint {
     "GET"
   }
 
+  var urlPath: String {
+    "/"
+  }
+
   var urlScheme: String {
     "https"
   }
