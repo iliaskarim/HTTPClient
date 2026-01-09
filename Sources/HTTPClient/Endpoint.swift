@@ -12,6 +12,8 @@ public protocol Endpoint {
 
   var urlPath: String { get }
 
+  var urlPort: Int? { get }
+
   var urlQueryItems: [String: String] { get }
 
   var urlScheme: String { get }
@@ -32,6 +34,10 @@ public extension Endpoint {
     "/"
   }
 
+  var urlPort: Int? {
+    nil
+  }
+
   var urlScheme: String {
     "https"
   }
@@ -50,6 +56,7 @@ private extension Endpoint {
     Result {
       var components = URLComponents()
       components.host = urlHost
+      components.port = urlPort
       components.path = urlPath
       components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
         URLQueryItem(name: $0.key, value: $0.value)
