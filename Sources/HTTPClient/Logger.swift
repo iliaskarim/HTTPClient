@@ -2,13 +2,11 @@ import Foundation
 
 private extension Data {
   var prettyPrintedString: String {
-    if let object = try? JSONSerialization.jsonObject(with: self),
-       let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted),
-       let string = String(data: data, encoding: .utf8) {
-      return string
-    }
-
-    return String(data: self, encoding: .utf8) ?? "<non-UTF8 data>"
+    (try? JSONSerialization.jsonObject(with: self))
+      .flatMap { try? JSONSerialization.data(withJSONObject: $0, options: .prettyPrinted) }
+      .flatMap { String(data: $0, encoding: .utf8) }
+      ?? String(data: self, encoding: .utf8)
+      ?? "<non-UTF8 data>"
   }
 }
 
@@ -29,28 +27,43 @@ final class Logger: Sendable {
     case .debug:
       print("\(request.httpMethod!) \(request)")
 
-    case .trace:
       if let httpBody = request.httpBody {
-        print("\(request.httpMethod!) \(request): \(httpBody.prettyPrintedString)")
-      } else {
-        print("\(request.httpMethod!) \(request)")
+        print(httpBody.prettyPrintedString)
+      }
+
+    case .trace:
+      print("\(request.httpMethod!) \(request)")
+      logRequestHeaders(request)
+
+      if let httpBody = request.httpBody {
+        print(httpBody.prettyPrintedString)
       }
     }
   }
 
-  func logResponse(_ statusCode: Int, data: Data, for request: URLRequest) {
+  func logResponse(_ response: HTTPURLResponse, data: Data, for request: URLRequest) {
+    let statusCode = response.statusCode
+
     switch logLevel {
     case .none:
       break
 
-    case .debug, .info:
+    case .info:
       print("\(statusCode) \(request)")
 
+    case .debug:
+      print("\(statusCode) \(request)")
+
+      if !data.isEmpty {
+        print(data.prettyPrintedString)
+      }
+
     case .trace:
-      if data.count > 0 {
-        print("\(statusCode) \(request): \(data.prettyPrintedString)")
-      } else {
-        print("\(statusCode) \(request)")
+      print("\(statusCode) \(request)")
+      logResponseHeaders(response)
+
+      if !data.isEmpty {
+        print(data.prettyPrintedString)
       }
     }
   }
@@ -58,6 +71,32 @@ final class Logger: Sendable {
   private init() {
     logLevel = ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
       LogLevel(rawValue: $0.lowercased())
-    } ?? .none
+    } ?? .info
+  }
+
+  private func logRequestHeaders(_ request: URLRequest) {
+    guard let headers = request.allHTTPHeaderFields else {
+      return
+    }
+
+    headers
+      .sorted { $0.key.lowercased() < $1.key.lowercased() }
+      .forEach { key, value in
+        print("> \(key): \(value)")
+      }
+  }
+
+  private func logResponseHeaders(_ response: HTTPURLResponse) {
+    response.allHeaderFields
+      .compactMap { key, value -> (String, String)? in
+        guard let key = key as? String else {
+          return nil
+        }
+        return (key, String(describing: value))
+      }
+      .sorted { $0.0.lowercased() < $1.0.lowercased() }
+      .forEach { key, value in
+        print("< \(key): \(value)")
+      }
   }
 }

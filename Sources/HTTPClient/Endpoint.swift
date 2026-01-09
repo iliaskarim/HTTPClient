@@ -98,7 +98,7 @@ private extension URLRequest {
 
         let statusCode = httpResponse.statusCode
 
-        Logger.shared.logResponse(httpResponse.statusCode, data: output.data, for: self)
+        Logger.shared.logResponse(httpResponse, data: output.data, for: self)
 
         guard 200 ..< 300 ~= statusCode else {
           throw HTTPError(
