@@ -10,6 +10,22 @@ private extension Data {
   }
 }
 
+private extension HTTPURLResponse {
+  var headers: [(String, String)] {
+    allHeaderFields.compactMap { key, value -> (String, String)? in
+      (key as? String).map { key in
+        (key, String(describing: value))
+      }
+    }
+  }
+}
+
+private extension URLRequest {
+  var headers: [(String, String)] {
+    allHTTPHeaderFields?.map { ($0.key, $0.value) } ?? []
+  }
+}
+
 final class Logger: Sendable {
   static let shared = Logger()
 
@@ -20,52 +36,39 @@ final class Logger: Sendable {
   private let logLevel: LogLevel
 
   func logRequest(_ request: URLRequest) {
-    switch logLevel {
-    case .none, .info:
-      break
-
-    case .debug:
-      print("\(request.httpMethod!) \(request)")
-
-      if let httpBody = request.httpBody {
-        print(httpBody.prettyPrintedString)
-      }
-
-    case .trace:
-      print("\(request.httpMethod!) \(request)")
-      logRequestHeaders(request)
-
-      if let httpBody = request.httpBody {
-        print(httpBody.prettyPrintedString)
-      }
+    guard [.debug, .trace].contains(logLevel) else {
+      return
     }
+
+    print("\(request.httpMethod!) \(request)")
+
+    if case .trace = logLevel {
+      logHeaders(request.headers, prefix: ">")
+    }
+
+    guard let httpBody = request.httpBody else {
+      return
+    }
+
+    print(httpBody.prettyPrintedString)
   }
 
   func logResponse(_ response: HTTPURLResponse, data: Data, for request: URLRequest) {
-    let statusCode = response.statusCode
-
-    switch logLevel {
-    case .none:
-      break
-
-    case .info:
-      print("\(statusCode) \(request)")
-
-    case .debug:
-      print("\(statusCode) \(request)")
-
-      if !data.isEmpty {
-        print(data.prettyPrintedString)
-      }
-
-    case .trace:
-      print("\(statusCode) \(request)")
-      logResponseHeaders(response)
-
-      if !data.isEmpty {
-        print(data.prettyPrintedString)
-      }
+    guard [.info, .debug, .trace].contains(logLevel) else {
+      return
     }
+
+    print("\(response.statusCode) \(request)")
+
+    if case .trace = logLevel {
+      logHeaders(response.headers, prefix: "<")
+    }
+
+    guard [.debug, .trace].contains(logLevel), !data.isEmpty else {
+      return
+    }
+
+    print(data.prettyPrintedString)
   }
 
   private init() {
@@ -74,29 +77,11 @@ final class Logger: Sendable {
     } ?? .info
   }
 
-  private func logRequestHeaders(_ request: URLRequest) {
-    guard let headers = request.allHTTPHeaderFields else {
-      return
-    }
-
-    headers
-      .sorted { $0.key.lowercased() < $1.key.lowercased() }
-      .forEach { key, value in
-        print("> \(key): \(value)")
-      }
-  }
-
-  private func logResponseHeaders(_ response: HTTPURLResponse) {
-    response.allHeaderFields
-      .compactMap { key, value -> (String, String)? in
-        guard let key = key as? String else {
-          return nil
-        }
-        return (key, String(describing: value))
-      }
+  private func logHeaders(_ headers: [(String, String)]?, prefix: String) {
+    headers?
       .sorted { $0.0.lowercased() < $1.0.lowercased() }
       .forEach { key, value in
-        print("< \(key): \(value)")
+        print("\(prefix) \(key): \(value)")
       }
   }
 }
