@@ -51,97 +51,118 @@ public extension Endpoint {
   }
 }
 
-private extension Endpoint {
-  func requestPublisher(bearerToken: String? = nil) -> AnyPublisher<URLRequest, Error> {
-    Result {
-      var components = URLComponents()
-      components.host = urlHost
-      components.port = urlPort
-      components.path = urlPath
-      components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
-        URLQueryItem(name: $0.key, value: $0.value)
-      }
-      components.scheme = urlScheme
-
-      guard let url = components.url else {
-        throw URLError(.badURL)
-      }
-
-      var request = URLRequest(url: url)
-      httpHeaderFields.forEach {
-        request.setValue($1, forHTTPHeaderField: $0)
-      }
-      request.httpBody = try httpBody()
-      request.httpMethod = httpMethod
-
-      if let bearerToken {
-        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
-      }
-
-      Logger.shared.logRequest(request)
-
-      return request
-    }
-    .publisher
-    .eraseToAnyPublisher()
-  }
-}
-
-private extension URLRequest {
-  func responsePublisher(using session: URLSession = .shared) -> AnyPublisher<Data, Error> {
-    session
-      .dataTaskPublisher(for: self)
-      .tryMap { output in
-        guard let httpResponse = output.response as? HTTPURLResponse else {
-          throw URLError(.badServerResponse)
-        }
-
-        let statusCode = httpResponse.statusCode
-
-        Logger.shared.logResponse(httpResponse, data: output.data, for: self)
-
-        guard 200 ..< 300 ~= statusCode else {
-          throw HTTPError(
-            payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: output.data),
-            statusCode: statusCode
-          )
-        }
-
-        return output.data
-      }
-      .eraseToAnyPublisher()
-  }
-}
-
 public extension Endpoint where Response: Decodable {
+  private var decoder: JSONDecoder {
+    ((Response.self as? CustomDecodable.Type)?.decodingStrategies ?? [])
+      .reduce(into: JSONDecoder()) { decoder, strategy in
+        strategy.apply(to: decoder)
+      }
+  }
+
+  func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Response {
+    try await decoder.decode(Response.self, from: responseData(using: session, bearerToken: bearerToken))
+  }
+
   func responsePublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Response, Error> {
-    let decoder = ((Response.self as? CustomDecodable.Type)?.decodingStrategies ?? [])
-      .reduce(into: JSONDecoder()) { decoder, strategy in
-        strategy.apply(to: decoder)
-      }
-
-    return requestPublisher(bearerToken: bearerToken)
-      .flatMap { request in
-        request.responsePublisher(using: session)
-      }
+    responseDataPublisher(using: session, bearerToken: bearerToken)
       .decode(type: Response.self, decoder: decoder)
       .eraseToAnyPublisher()
   }
 }
 
 public extension Endpoint where Response == Void {
+  func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws {
+    try await responseData(using: session, bearerToken: bearerToken)
+  }
+
   func responsePublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Void, Error> {
-    requestPublisher(bearerToken: bearerToken)
-      .flatMap { request in
-        request.responsePublisher(using: session)
-      }
+    responseDataPublisher(using: session, bearerToken: bearerToken)
       .map { _ in }
       .eraseToAnyPublisher()
+  }
+}
+
+private extension Endpoint {
+  @discardableResult
+  func responseData(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Data {
+    let request = try request(bearerToken: bearerToken)
+    let (data, response) = try await session.data(for: request)
+    try handleResponse(data: data, response: response, request: request)
+    return data
+  }
+
+  func responseDataPublisher(
+    using session: URLSession = .shared,
+    bearerToken: String? = nil
+  ) -> AnyPublisher<Data, Error> {
+    Deferred {
+      Future<URLRequest, Error> { promise in
+        do {
+          try promise(.success(self.request(bearerToken: bearerToken)))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+    .flatMap { request in
+      session.dataTaskPublisher(for: request)
+        .tryMap { data, response in
+          try handleResponse(data: data, response: response, request: request)
+          return data
+        }
+    }
+    .eraseToAnyPublisher()
+  }
+
+  func handleResponse(data: Data, response: URLResponse, request: URLRequest) throws {
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw URLError(.badServerResponse)
+    }
+
+    Logger.shared.logResponse(httpResponse, data: data, for: request)
+
+    let statusCode = httpResponse.statusCode
+    guard 200 ..< 300 ~= statusCode else {
+      throw HTTPError(
+        payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: data),
+        statusCode: statusCode
+      )
+    }
+  }
+
+  func request(bearerToken: String? = nil) throws -> URLRequest {
+    var components = URLComponents()
+    components.host = urlHost
+    components.port = urlPort
+    components.path = urlPath
+    components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
+      URLQueryItem(name: $0.key, value: $0.value)
+    }
+    components.scheme = urlScheme
+
+    guard let url = components.url else {
+      throw URLError(.badURL)
+    }
+
+    var request = URLRequest(url: url)
+    httpHeaderFields.forEach {
+      request.setValue($1, forHTTPHeaderField: $0)
+    }
+    request.httpBody = try httpBody()
+    request.httpMethod = httpMethod
+
+    if let bearerToken {
+      request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
+    }
+
+    Logger.shared.logRequest(request)
+
+    return request
   }
 }

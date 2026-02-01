@@ -21,11 +21,10 @@ public extension JSONRequestEndpoint {
 
 public extension JSONRequestEndpoint where Request: Encodable {
   func httpBody() throws -> Data? {
-    let encoder = ((Request.self as? CustomEncodable.Type)?.encodingStrategies ?? [])
+    try ((Request.self as? CustomEncodable.Type)?.encodingStrategies ?? [])
       .reduce(into: JSONEncoder()) { encoder, strategy in
         strategy.apply(to: encoder)
       }
-
-    return try encoder.encode(request)
+      .encode(request)
   }
 }
