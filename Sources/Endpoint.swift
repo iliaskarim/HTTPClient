@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-public protocol Endpoint {
+public protocol Endpoint: Sendable {
   associatedtype Response
 
   var httpHeaderFields: [String: String] { get }
