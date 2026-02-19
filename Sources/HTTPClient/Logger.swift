@@ -72,9 +72,9 @@ final class Logger: Sendable {
   }
 
   private init() {
-    logLevel = ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap {
-      LogLevel(rawValue: $0.lowercased())
-    } ?? .info
+    logLevel = (ProcessInfo.processInfo.environment["LOG_LEVEL"]
+      ?? Bundle.main.object(forInfoDictionaryKey: "LOG_LEVEL") as? String)
+      .flatMap { LogLevel(rawValue: $0.lowercased()) } ?? .info
   }
 
   private func logHeaders(_ headers: [(String, String)]?, prefix: String) {
