@@ -15,6 +15,23 @@ final class Logger: Sendable {
     category: "network"
   )
 
+  func logError(_ error: Error) {
+    guard logLevel != .none else {
+      return
+    }
+
+    switch error {
+    case let urlError as URLError:
+      osLogger.error("Transport error: \(urlError.localizedDescription)")
+
+    case is HTTPError:
+      break // already logged in logResponse
+
+    default:
+      osLogger.error("Unexpected error: \(error.localizedDescription)")
+    }
+  }
+
   func logRequest(_ request: URLRequest) {
     guard ![.none, .error].contains(logLevel) else {
       return
