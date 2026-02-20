@@ -1,31 +1,5 @@
 import Foundation
 
-private extension Data {
-  var prettyPrintedString: String {
-    (try? JSONSerialization.jsonObject(with: self))
-      .flatMap { try? JSONSerialization.data(withJSONObject: $0, options: .prettyPrinted) }
-      .flatMap { String(data: $0, encoding: .utf8) }
-      ?? String(data: self, encoding: .utf8)
-      ?? "<non-UTF8 data>"
-  }
-}
-
-private extension HTTPURLResponse {
-  var headers: [(String, String)] {
-    allHeaderFields.compactMap { key, value -> (String, String)? in
-      (key as? String).map { key in
-        (key, String(describing: value))
-      }
-    }
-  }
-}
-
-private extension URLRequest {
-  var headers: [(String, String)] {
-    allHTTPHeaderFields?.map { ($0.key, $0.value) } ?? []
-  }
-}
-
 final class Logger: Sendable {
   static let shared = Logger()
 
@@ -36,17 +10,20 @@ final class Logger: Sendable {
   private let logLevel: LogLevel
 
   func logRequest(_ request: URLRequest) {
-    guard [.debug, .trace].contains(logLevel) else {
+    guard logLevel != .none else {
       return
     }
 
+    // INFO: log request method and URL.
     print("\(request.httpMethod!) \(request)")
 
+    // TRACE: log request headers.
     if case .trace = logLevel {
-      logHeaders(request.headers, prefix: ">")
+      logHeaders(request.headerPairs, prefix: ">")
     }
 
-    guard let httpBody = request.httpBody else {
+    // DEBUG: log request body.
+    guard let httpBody = request.httpBody, [.debug, .trace].contains(logLevel) else {
       return
     }
 
@@ -54,16 +31,19 @@ final class Logger: Sendable {
   }
 
   func logResponse(_ response: HTTPURLResponse, data: Data, for request: URLRequest) {
-    guard [.info, .debug, .trace].contains(logLevel) else {
+    guard logLevel != .none else {
       return
     }
 
+    // INFO: log response status code and URL.
     print("\(response.statusCode) \(request)")
 
+    // TRACE: log response headers.
     if case .trace = logLevel {
-      logHeaders(response.headers, prefix: "<")
+      logHeaders(response.headerPairs, prefix: "<")
     }
 
+    // DEBUG: log response body.
     guard [.debug, .trace].contains(logLevel), !data.isEmpty else {
       return
     }
@@ -83,5 +63,31 @@ final class Logger: Sendable {
       .forEach { key, value in
         print("\(prefix) \(key): \(value)")
       }
+  }
+}
+
+private extension Data {
+  var prettyPrintedString: String {
+    (try? JSONSerialization.jsonObject(with: self))
+      .flatMap { try? JSONSerialization.data(withJSONObject: $0, options: .prettyPrinted) }
+      .flatMap { String(data: $0, encoding: .utf8) }
+      ?? String(data: self, encoding: .utf8)
+      ?? "<non-UTF8 data>"
+  }
+}
+
+private extension HTTPURLResponse {
+  var headerPairs: [(String, String)] {
+    allHeaderFields.compactMap { key, value -> (String, String)? in
+      (key as? String).map { key in
+        (key, String(describing: value))
+      }
+    }
+  }
+}
+
+private extension URLRequest {
+  var headerPairs: [(String, String)] {
+    allHTTPHeaderFields?.map { ($0.key, $0.value) } ?? []
   }
 }
