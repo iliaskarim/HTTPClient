@@ -127,11 +127,10 @@ private extension Endpoint {
 
     Logger.shared.logResponse(httpResponse, data: data, for: request)
 
-    let statusCode = httpResponse.statusCode
-    guard 200 ..< 300 ~= statusCode else {
+    guard httpResponse.isOK else {
       throw HTTPError(
         payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: data),
-        statusCode: statusCode
+        statusCode: httpResponse.statusCode
       )
     }
   }
