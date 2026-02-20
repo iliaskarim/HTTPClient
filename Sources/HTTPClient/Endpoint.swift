@@ -92,9 +92,14 @@ private extension Endpoint {
   @discardableResult
   func responseData(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Data {
     let request = try request(bearerToken: bearerToken)
-    let (data, response) = try await session.data(for: request)
-    try handleResponse(data: data, response: response, request: request)
-    return data
+    do {
+      let (data, response) = try await session.data(for: request)
+      try handleResponse(data: data, response: response, request: request)
+      return data
+    } catch {
+      Logger.shared.logError(error)
+      throw error
+    }
   }
 
   func responseDataPublisher(
@@ -115,6 +120,10 @@ private extension Endpoint {
         .tryMap { data, response in
           try handleResponse(data: data, response: response, request: request)
           return data
+        }
+        .mapError { error in
+          Logger.shared.logError(error)
+          return error
         }
     }
     .eraseToAnyPublisher()
