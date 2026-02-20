@@ -4,13 +4,13 @@ final class Logger: Sendable {
   static let shared = Logger()
 
   private enum LogLevel: String {
-    case none, info, debug, trace
+    case none, error, info, debug, trace
   }
 
   private let logLevel: LogLevel
 
   func logRequest(_ request: URLRequest) {
-    guard logLevel != .none else {
+    guard ![.none, .error].contains(logLevel) else {
       return
     }
 
@@ -36,7 +36,10 @@ final class Logger: Sendable {
     }
 
     // INFO: log response status code and URL.
-    print("\(response.statusCode) \(request)")
+    // ERROR: log response line if the status code is non-2xx.
+    if !response.isOK || logLevel != .error {
+      print("\(response.statusCode) \(request)")
+    }
 
     // TRACE: log response headers.
     if case .trace = logLevel {
