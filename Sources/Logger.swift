@@ -25,7 +25,7 @@ final class Logger: Sendable {
 
     // TRACE: log request headers.
     if case .trace = logLevel {
-      logHeaders(request.headerPairs, prefix: ">")
+      print(request.headerPairs.prettyPrintedHeadersString(prefix: ">"))
     }
 
     // DEBUG: log request body.
@@ -51,7 +51,7 @@ final class Logger: Sendable {
 
     // TRACE: log response headers.
     if case .trace = logLevel {
-      logHeaders(response.headerPairs, prefix: "<")
+      print(response.headerPairs.prettyPrintedHeadersString(prefix: "<"))
     }
 
     // DEBUG: log response body.
@@ -67,13 +67,13 @@ final class Logger: Sendable {
       ?? Bundle.main.object(forInfoDictionaryKey: "LOG_LEVEL") as? String)
       .flatMap { LogLevel(rawValue: $0.lowercased()) } ?? .none
   }
+}
 
-  private func logHeaders(_ headers: [(String, String)]?, prefix: String) {
-    headers?
-      .sorted { $0.0.lowercased() < $1.0.lowercased() }
-      .forEach { key, value in
-        print("\(prefix) \(key): \(value)")
-      }
+private extension [(String, String)] {
+  func prettyPrintedHeadersString(prefix: String) -> String {
+    sorted { $0.0.lowercased() < $1.0.lowercased() }
+      .map { key, value in "\(prefix) \(key): \(value)" }
+      .joined(separator: "\n")
   }
 }
 
