@@ -2,8 +2,26 @@ import Foundation
 import OSLog
 
 final class Logger: Sendable {
-  private enum LogLevel: String {
+  private enum LogLevel: String, Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+      lhs.priority < rhs.priority
+    }
+
     case none, error, info, debug, trace
+
+    private var priority: Int {
+      switch self {
+      case .none: 0
+
+      case .error: 1
+
+      case .info: 2
+
+      case .debug: 3
+
+      case .trace: 4
+      }
+    }
   }
 
   static let shared = Logger()
@@ -16,7 +34,7 @@ final class Logger: Sendable {
   )
 
   func logError(_ error: Error) {
-    guard logLevel != .none else {
+    guard logLevel > .none else {
       return
     }
 
@@ -33,7 +51,7 @@ final class Logger: Sendable {
   }
 
   func logRequest(_ request: URLRequest) {
-    guard ![.none, .error].contains(logLevel) else {
+    guard logLevel > .error else {
       return
     }
 
@@ -46,7 +64,7 @@ final class Logger: Sendable {
     }
 
     // DEBUG: log request body.
-    guard let httpBody = request.httpBody, [.debug, .trace].contains(logLevel) else {
+    guard let httpBody = request.httpBody, logLevel >= .debug else {
       return
     }
 
@@ -54,7 +72,7 @@ final class Logger: Sendable {
   }
 
   func logResponse(_ response: HTTPURLResponse, data: Data, for request: URLRequest) {
-    guard logLevel != .none else {
+    guard logLevel > .none else {
       return
     }
 
@@ -62,7 +80,7 @@ final class Logger: Sendable {
     // ERROR: log response line if the status code is non-2xx.
     if !response.isOK {
       osLogger.error("\(response.statusCode, privacy: .public) \(request, privacy: .public)")
-    } else if logLevel != .error {
+    } else if logLevel > .error {
       print("\(response.statusCode) \(request)")
     }
 
@@ -72,7 +90,7 @@ final class Logger: Sendable {
     }
 
     // DEBUG: log response body.
-    guard [.debug, .trace].contains(logLevel), !data.isEmpty else {
+    guard logLevel >= .debug, !data.isEmpty else {
       return
     }
 
