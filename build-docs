@@ -8,8 +8,32 @@ DOCC="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolc
 # name matches the product/scheme name).
 SCHEME="$(basename "$(pwd)")"
 
+# when serving from a subpath (e.g. GitHub Pages), use a hosting base path
+# default assumes the documentation will live under /<SchemeName> on the
+# web server. passing `--no-base` on the command line will disable this
+# behavior and omit the flag entirely (resulting in root-relative resource
+# links).
+HOSTING_BASE_PATH="/$SCHEME"
+
+# simple boolean flag parsing; recognize --no-base to clear the path
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-base)
+            HOSTING_BASE_PATH=""
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
 # clean docs
 rm -rf .build build docs
+
+HOSTING_ARGS=()
+[ -n "$HOSTING_BASE_PATH" ] && HOSTING_ARGS=(--hosting-base-path "$HOSTING_BASE_PATH")
 
 # build docs
 xcodebuild docbuild \
@@ -18,4 +42,5 @@ xcodebuild docbuild \
     -derivedDataPath build > /dev/null
 $DOCC process-archive transform-for-static-hosting \
     --output-path ./docs \
+    "${HOSTING_ARGS[@]}" \
     "./build/Build/Products/Debug/$SCHEME.doccarchive" > /dev/null
