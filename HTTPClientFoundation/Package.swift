@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-  name: "HTTPClient",
+  name: "HTTPClientFoundation",
   platforms: [
     .macOS(.v12),
     .iOS(.v15)
@@ -12,19 +12,26 @@ let package = Package(
   products: [
     // Products define the executables and libraries a package produces, making them visible to other packages.
     .library(
-      name: "HTTPClient",
-      targets: ["HTTPClient"]
+      name: "HTTPClientFoundation",
+      targets: ["HTTPClientFoundation"]
     )
+  ],
+  dependencies: [
+    // Dependencies declare other packages that this package depends on.
+    .package(path: "../HTTPClientCore")
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
     // Targets can depend on other targets in this package and products from dependencies.
     .target(
-      name: "HTTPClient"
+      name: "HTTPClientFoundation",
+      dependencies: [
+        .product(name: "HTTPClientCore", package: "HTTPClientCore")
+      ]
     ),
     .testTarget(
-      name: "HTTPClientTests",
-      dependencies: ["HTTPClient"]
+      name: "HTTPClientFoundationTests",
+      dependencies: ["HTTPClientFoundation"]
     )
   ]
 )
