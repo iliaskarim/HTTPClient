@@ -90,6 +90,37 @@
         "Lint file"
       ],
       "dependsOrder": "sequence"
+    },
+    {
+      "label": "Build docs",
+      "type": "shell",
+      "command": "./build-docs",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Build docs with no base path",
+      "type": "shell",
+      "command": "./build-docs --no-base",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Serve docs",
+      "type": "shell",
+      "command": "python3 -m http.server --directory ./docs",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": false,
+        "showReuseMessage": false,
+        "clear": true
+      }
     }
   ]
 }
