@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public extension Endpoint where Response: Decodable {
   /// Obtain a decoded response by executing the request asynchronously.
