@@ -1,12 +1,17 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+#if canImport(OSLog)
 import OSLog
+#endif
 
 /// Central logger used throughout the HTTP client.
 ///
-/// The logger supports multiple verbosity levels controlled by the
-/// `LOG_LEVEL` environment variable or Info.plist entry. It emits human-
-/// readable output to `stdout` for development/debugging and forwards
-/// error-level messages to ``os.Logger`` so they appear in Console.app.
+/// The logger supports multiple verbosity levels controlled by the `LOG_LEVEL`
+/// environment variable or Info.plist entry. It emits human-readable output
+/// to `stdout` for development/debugging. Error-level messages are sent to
+/// ``os.Logger`` on Apple platforms and written to `stderr` on Linux.
 final class Logger: Sendable {
   /// Verbosity level for the logger.
   ///
@@ -35,24 +40,27 @@ final class Logger: Sendable {
     }
   }
 
-  /// Shared singleton instance used by the public API.
+  /// Shared singleton instance used internally by the library.
   static let shared = Logger()
 
   /// Current log level; controls how much information gets printed.
   private let logLevel: LogLevel
 
-  /// ``os.Logger`` used for error messages so they integrate with the unified
-  /// logging system and respect system privacy controls.
+#if canImport(OSLog)
+  /// ``os.Logger`` used for error messages on Apple platforms so they integrate
+  /// with the unified logging system and respect system privacy controls.
   private let osLogger = os.Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "com.iliaskarim.HTTPClient",
     category: "network"
   )
+#endif
 
   /// Log an error-level event.
   ///
-  /// Most errors are forwarded to the underlying ``os.Logger``; transport
-  /// errors get a customized message and HTTP errors are intentionally ignored
-  /// here because they are handled by ``logResponse(_:data:for:)``.
+  /// Most errors are forwarded to ``logErrorMessage(_:)``, which emits to
+  /// ``os.Logger`` on Apple platforms and `stderr` on Linux. Transport errors
+  /// get a customized message, and HTTP errors are intentionally ignored here
+  /// because they are handled by ``logResponse(_:data:for:)``.
   ///
   /// - Parameter error: The error to log.
   func logError(_ error: Error) {
@@ -62,17 +70,17 @@ final class Logger: Sendable {
 
     switch error {
     case let urlError as URLError:
-      osLogger.error("Transport error: \(urlError.localizedDescription)")
+      logErrorMessage("Transport error: \(urlError.localizedDescription)")
 
     case is HTTPError:
       break // already logged in logResponse
 
     default:
-      osLogger.error("Unexpected error: \(error.localizedDescription)")
+      logErrorMessage("Unexpected error: \(error.localizedDescription)")
     }
   }
 
-  /// Emit details about the given ``URLRequest``.
+  /// Emit details about an outgoing ``URLRequest``.
   ///
   /// - Error level: no request details are emitted
   /// - Info level: method and URL
@@ -101,9 +109,10 @@ final class Logger: Sendable {
     print(httpBody.prettyPrintedString)
   }
 
-  /// Emit details about the given ``HTTPURLResponse``.
+  /// Emit details about an incoming ``HTTPURLResponse``.
   ///
-  /// - Error level: non-2xx status codes are forwarded to ``os.Logger``
+  /// - Error level: non-2xx status codes are sent to ``os.Logger`` on Apple
+  ///   platforms and `stderr` on Linux
   /// - Info level: status code and URL
   /// - Debug level: response body when non-empty
   /// - Trace level: response headers
@@ -120,7 +129,7 @@ final class Logger: Sendable {
     // INFO: log response status code and URL.
     // ERROR: log response line if the status code is non-2xx.
     if !response.isOK {
-      osLogger.error("\(response.statusCode, privacy: .public) \(request, privacy: .public)")
+      logErrorMessage("\(response.statusCode) \(request)")
     } else if logLevel > .error {
       print("\(response.statusCode) \(request)")
     }
@@ -144,6 +153,19 @@ final class Logger: Sendable {
     logLevel = (ProcessInfo.processInfo.environment["LOG_LEVEL"]
       ?? Bundle.main.object(forInfoDictionaryKey: "LOG_LEVEL") as? String)
       .flatMap { LogLevel(rawValue: $0.lowercased()) } ?? .none
+  }
+
+  /// Log an error message, using `os.Logger` on Apple platforms or `stderr` on
+  /// Linux.
+  ///
+  /// - Parameter message: The error message to log.
+  private func logErrorMessage(_ message: String) {
+#if canImport(OSLog)
+    osLogger.error("\(message, privacy: .public)")
+#else
+    let data = Data((message + "\n").utf8)
+    try? FileHandle.standardError.write(contentsOf: data)
+#endif
   }
 }
 

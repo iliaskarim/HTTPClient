@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 extension Endpoint {
   /// Validate an HTTP response and throw an ``HTTPError`` if the status

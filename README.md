@@ -6,7 +6,8 @@ A lightweight Swift package providing a generic, protocol-driven HTTP client. It
 
 * Define endpoints by conforming to `Endpoint` (or `JSONRequestEndpoint` for POST/PUT with a JSON body).
 * Automatic construction of `URLRequest` from endpoint properties.
-* Async/await and Combine publisher support for executing requests.
+* Async/await support for executing requests on Apple platforms and Linux.
+* Combine publisher support for executing requests on Apple platforms.
 * Configurable JSON encoder/decoder strategies via the `CustomEncodable`/`CustomDecodable` protocols.
 * Structured `HTTPError` payload handling.
 * Built-in logger with levels (`none`, `error`, `info`, `debug`, `trace`) controllable via `LOG_LEVEL` environment variable or Info.plist entry.
@@ -111,7 +112,7 @@ For example:
 export LOG_LEVEL=trace
 ```
 
-Request/response details and bodies are written to stdout; all error-level messages are sent to the system logging facility via `os.Logger` so they appear in Console.app and respect system privacy settings.
+Request/response details and bodies are written to stdout. On Apple platforms, error-level messages are sent to the system logging facility via `os.Logger` so they appear in Console.app and respect system privacy settings. On Linux, error-level messages are written directly to `stderr`.
 
 ## Testing
 
@@ -120,6 +121,12 @@ Run the test suite with:
 ```bash
 swift test
 ```
+
+## Platform Support
+
+HTTPClient supports Apple platforms and Linux.
+
+On Linux, the async/await request APIs are supported. Combine-based APIs are available only on Apple platforms.
 
 ## License
 

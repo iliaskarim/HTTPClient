@@ -1,3 +1,4 @@
+#if canImport(Combine)
 import Combine
 import Foundation
 
@@ -87,3 +88,4 @@ private extension Endpoint {
     .eraseToAnyPublisher()
   }
 }
+#endif
