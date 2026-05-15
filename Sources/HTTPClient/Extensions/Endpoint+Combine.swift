@@ -4,7 +4,7 @@ import Foundation
 
 public extension Endpoint where Response: Decodable {
   /// Obtain a publisher that executes the request and emits the decoded
-  /// response.
+  /// response body.
   ///
   /// If the response type conforms to ``CustomDecodable``, any decoding
   /// strategies are automatically applied (e.g., date formatting and key
@@ -26,6 +26,26 @@ public extension Endpoint where Response: Decodable {
     responseDataPublisher(using: session, bearerToken: bearerToken)
       .decode(type: Response.self, decoder: decoder)
       .eraseToAnyPublisher()
+  }
+}
+
+public extension Endpoint where Response == Data {
+  /// Obtain a publisher that executes the request and emits the raw response
+  /// body.
+  ///
+  /// - Parameters:
+  ///   - session: The ``URLSession`` to use for the request. Defaults to the
+  ///     shared session.
+  ///   - bearerToken: An optional bearer token for the `Authorization`
+  ///     header.
+  /// - Returns: A publisher that emits the response body data or fails with
+  ///   ``HTTPError`` if the status code is non-2xx, ``URLError`` for transport
+  ///   failures, or any error thrown from ``httpBody()``.
+  func responsePublisher(
+    using session: URLSession = .shared,
+    bearerToken: String? = nil
+  ) -> AnyPublisher<Data, Error> {
+    responseDataPublisher(using: session, bearerToken: bearerToken)
   }
 }
 

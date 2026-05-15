@@ -4,7 +4,7 @@ import FoundationNetworking
 #endif
 
 public extension Endpoint where Response: Decodable {
-  /// Obtain a decoded response by executing the request asynchronously.
+  /// Execute the request asynchronously and return the decoded response body.
   ///
   /// If the response type conforms to ``CustomDecodable``, any decoding
   /// strategies are automatically applied (e.g., date formatting and key
@@ -15,12 +15,28 @@ public extension Endpoint where Response: Decodable {
   ///     shared session.
   ///   - bearerToken: An optional bearer token for the `Authorization`
   ///     header.
-  /// - Returns: The decoded response body.
+  /// - Returns: The decoded response body on 2xx.
   /// - Throws: ``HTTPError`` if the status code is non-2xx, ``URLError`` for
   ///   transport failures, a decoding error if the response body cannot be
   ///   decoded as the expected type, or any error thrown from ``httpBody()``.
   func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Response {
     try await decoder.decode(Response.self, from: responseData(using: session, bearerToken: bearerToken))
+  }
+}
+
+public extension Endpoint where Response == Data {
+  /// Execute the request asynchronously and return the raw response body.
+  ///
+  /// - Parameters:
+  ///   - session: The ``URLSession`` to use for the request. Defaults to the
+  ///     shared session.
+  ///   - bearerToken: An optional bearer token for the `Authorization`
+  ///     header.
+  /// - Returns: The response body data on 2xx.
+  /// - Throws: ``HTTPError`` if the status code is non-2xx, ``URLError`` for
+  ///   transport failures, or any error thrown from ``httpBody()``.
+  func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Data {
+    try await responseData(using: session, bearerToken: bearerToken)
   }
 }
 
