@@ -140,6 +140,8 @@ To rebuild the documentation site locally (macOS with Xcode installed):
 
 Output is written to `./docs` (not committed).
 
+See [ROADMAP.md](ROADMAP.md) for planned changes.
+
 ## Platform Support
 
 HTTPClient supports Apple platforms and Linux.
