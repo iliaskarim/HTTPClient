@@ -94,7 +94,7 @@
     {
       "label": "Build docs",
       "type": "shell",
-      "command": "./build-docs",
+      "command": "./scripts/build-docs",
       "problemMatcher": [],
       "presentation": {
         "echo": false,
