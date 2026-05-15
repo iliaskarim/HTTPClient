@@ -123,6 +123,23 @@ Run the test suite with:
 swift test
 ```
 
+## Contributing
+
+Contributions are welcome. Please open an issue before large changes so we can align on approach.
+
+1. Fork the repository and create a branch for your change.
+2. Run `swift build` and `swift test` to confirm everything passes.
+3. Match existing code style and add doc comments for new public API.
+4. Open a pull request with a short description of what changed and why.
+
+To rebuild the documentation site locally (macOS with Xcode installed):
+
+```bash
+./scripts/build-docs
+```
+
+Output is written to `./docs` (not committed).
+
 ## Platform Support
 
 HTTPClient supports Apple platforms and Linux.
