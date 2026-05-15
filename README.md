@@ -4,7 +4,7 @@ A lightweight Swift package providing a generic, protocol-driven HTTP client. It
 
 ## Features
 
-* Define endpoints by conforming to `Endpoint` (or `JSONRequestEndpoint` for POST/PUT with a JSON body).
+* Define endpoints by conforming to `Endpoint`.
 * Automatic construction of `URLRequest` from endpoint properties.
 * Async/await support for executing requests on Apple platforms and Linux.
 * Combine publisher support for executing requests on Apple platforms.
@@ -49,10 +49,11 @@ struct UserEndpoint: Endpoint {
 }
 ```
 
-For requests with a JSON body, use `JSONRequestEndpoint`:
+For requests with a JSON body, use `Endpoint` with `Request: Encodable` and
+`let request: Request`.
 
 ```swift
-struct CreateUserEndpoint: JSONRequestEndpoint {
+struct CreateUserEndpoint: Endpoint {
     struct Request: Encodable {
         let name: String
     }
