@@ -11,15 +11,15 @@ public struct HTTPError: Error, Sendable {
   /// extracted from the response body. This is `nil` if the server response
   /// body could not be decoded as JSON with the expected schema.
   public struct Payload: Decodable, Sendable {
-    enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey {
       case code = "error"
 
       case message
     }
 
     /// The machine-readable error identifier from the server (mapped from
-    /// the JSON `error` field).
-    public let code: String
+    /// the JSON `error` field), when present.
+    public let code: String?
 
     /// The human-readable error message from the server.
     public let message: String
