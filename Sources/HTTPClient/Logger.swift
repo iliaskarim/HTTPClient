@@ -9,9 +9,10 @@ import OSLog
 /// Central logger used throughout the HTTP client.
 ///
 /// The logger supports multiple verbosity levels controlled by the `LOG_LEVEL`
-/// environment variable or Info.plist entry. It emits human-readable output
-/// to `stdout` for development/debugging. Error-level messages are sent to
-/// ``os.Logger`` on Apple platforms and written to `stderr` on Linux.
+/// environment variable or Info.plist entry. Request and successful response
+/// lines are written to `stdout`. Error-level messages (non-2xx status codes,
+/// transport failures, and similar) are also printed to `stdout`, and additionally
+/// sent to ``os.Logger`` on Apple platforms or `stderr` on Linux.
 final class Logger: Sendable {
   /// Verbosity level for the logger.
   ///
@@ -57,10 +58,10 @@ final class Logger: Sendable {
 
   /// Log an error-level event.
   ///
-  /// Most errors are forwarded to ``logErrorMessage(_:)``, which emits to
-  /// ``os.Logger`` on Apple platforms and `stderr` on Linux. Transport errors
-  /// get a customized message, and HTTP errors are intentionally ignored here
-  /// because they are handled by ``logResponse(_:data:for:)``.
+  /// Most errors are forwarded to ``logErrorMessage(_:)``, which writes to
+  /// `stdout` and also to ``os.Logger`` on Apple platforms or `stderr` on Linux.
+  /// Transport errors get a customized message, and HTTP errors are intentionally
+  /// ignored here because they are handled by ``logResponse(_:data:for:)``.
   ///
   /// - Parameter error: The error to log.
   func logError(_ error: Error) {
@@ -111,9 +112,9 @@ final class Logger: Sendable {
 
   /// Emit details about an incoming ``HTTPURLResponse``.
   ///
-  /// - Error level: non-2xx status codes are sent to ``os.Logger`` on Apple
-  ///   platforms and `stderr` on Linux
-  /// - Info level: status code and URL
+  /// - Error level: non-2xx status code and URL via ``logErrorMessage(_:)``
+  ///   (`stdout`, plus ``os.Logger`` on Apple platforms or `stderr` on Linux)
+  /// - Info level: 2xx status code and URL to `stdout`
   /// - Debug level: response body when non-empty
   /// - Trace level: response headers
   ///
@@ -157,8 +158,8 @@ final class Logger: Sendable {
       .flatMap { LogLevel(rawValue: $0.lowercased()) } ?? .none
   }
 
-  /// Log an error message, using `os.Logger` on Apple platforms or `stderr` on
-  /// Linux.
+  /// Log an error message to `stdout`, and also to ``os.Logger`` on Apple
+  /// platforms or `stderr` on Linux.
   ///
   /// - Parameter message: The error message to log.
   private func logErrorMessage(_ message: String) {
@@ -168,6 +169,7 @@ final class Logger: Sendable {
     let data = Data((message + "\n").utf8)
     try? FileHandle.standardError.write(contentsOf: data)
 #endif
+    print(message)
   }
 }
 
