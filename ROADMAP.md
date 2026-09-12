@@ -142,7 +142,6 @@ let user = try await client.response(for: FetchCurrentUserDetailEndpoint())
 |-------|-----------|
 | `GitHubEndpoint` provides `urlHost` | Unchanged (`ComponentEndpoint` in GitHubAPI) |
 | `UserSession.response(for:)` + 401 handling | Thin wrapper (Keychain + UI), delegating to `Client` |
-| `GroupedCommitsPager.bearerToken` | Hold `Client` or `UserSession`, with no manual token on pager |
 | `endpoint.response(bearerToken:)` | `client.response(for: endpoint)` or keep 2.x API |
 
 ## Versioning
