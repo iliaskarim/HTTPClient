@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Test func testSnakeCaseKeyDecodingStrategy() async throws {
+@Test func testSnakeCaseKeyDecodingStrategy() {
   let decoder = JSONDecoder()
   SnakeCaseKeyDecodingStrategy.shared.apply(to: decoder)
   let isSnakeCase = switch decoder.keyDecodingStrategy {
