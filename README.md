@@ -132,15 +132,89 @@ Contributions are welcome. Please open an issue before large changes so we can a
 3. Match existing code style and add doc comments for new public API.
 4. Open a pull request with a short description of what changed and why.
 
-To rebuild the documentation site locally (macOS with Xcode installed):
+See [ROADMAP.md](ROADMAP.md) for planned changes.
+
+## Documentation
+
+The public API is hosted at [httpclient.iliaskarim.org](https://httpclient.iliaskarim.org/). Merges (and pushes) to `main` run [`.github/workflows/deploy-docs.yml`](.github/workflows/deploy-docs.yml), which builds DocC and uploads it to S3. You can also trigger **Deploy docs** manually from the Actions tab.
+
+To rebuild the site locally (macOS with Xcode installed):
 
 ```bash
 ./scripts/build-docs
 ```
 
-Output is written to `./docs` (not committed).
+Output is written to `./docs` (not committed). Serve it with:
 
-See [ROADMAP.md](ROADMAP.md) for planned changes.
+```bash
+python3 -m http.server --directory ./docs
+```
+
+To publish a local build (requires the [AWS CLI](https://aws.amazon.com/cli/) and credentials that can write the bucket):
+
+```bash
+./scripts/upload-docs
+```
+
+Defaults to `s3://httpclient.iliaskarim.org` and CloudFront distribution `E3ELNGKSYELRW6` (invalidates `/*` after each sync). Override with `HTTPCLIENT_S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, or `AWS_PROFILE` if needed.
+
+### One-time GitHub → AWS setup (OIDC)
+
+1. In IAM, create an identity provider for GitHub OIDC if you do not already have one:
+   - Provider URL: `https://token.actions.githubusercontent.com`
+   - Audience: `sts.amazonaws.com`
+2. Create an IAM role trusted by that provider, or add this repository to an existing GitHub OIDC role. Trust policy (adjust account as needed):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:iliaskarim/HTTPClient:*"
+        }
+      }
+    }
+  ]
+}
+```
+
+3. Attach a policy that allows syncing the docs bucket and invalidating CloudFront, for example:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::httpclient.iliaskarim.org"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::httpclient.iliaskarim.org/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["cloudfront:CreateInvalidation"],
+      "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/E3ELNGKSYELRW6"
+    }
+  ]
+}
+```
+
+4. In this GitHub repo, add secret `AWS_ROLE_ARN` with that role’s ARN.
+5. Optional: set repository variable `AWS_REGION` (defaults to `us-east-1`).
 
 ## Platform Support
 
