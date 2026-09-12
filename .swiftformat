@@ -1,6 +1,7 @@
 --swiftversion 6.0
 --disable blankLinesAroundMark
 --disable preferForLoop
+--disable swiftTestingTestCaseNames
 --disable wrapMultilineStatementBraces
 --commas inline
 --ifdef outdent

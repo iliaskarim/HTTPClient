@@ -130,9 +130,10 @@ CI runs the same command on Linux (Swift 6.0) and macOS for every pull request.
 Contributions are welcome. Please open an issue before large changes so we can align on approach.
 
 1. Fork the repository and create a branch for your change.
-2. Run `swift build` and `swift test` to confirm everything passes.
-3. Match existing code style and add doc comments for new public API.
-4. Open a pull request with a short description of what changed and why.
+2. Run `swiftformat --lint .` and `swiftlint lint --strict .` to match CI style checks.
+3. Run `swift build` and `swift test` to confirm everything passes.
+4. Match existing code style and add doc comments for new public API.
+5. Open a pull request with a short description of what changed and why.
 
 To rebuild the documentation site locally (macOS with Xcode installed):
 
