@@ -19,9 +19,13 @@ Add the package to your project using Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iliaskarim/HTTPClient.git", from: "1.0.0")
+    .package(url: "https://github.com/iliaskarim/HTTPClient.git", from: "2.0.0")
 ]
 ```
+
+2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt
+`ComponentEndpoint` if you still build the URL from host, path, port, query,
+and scheme. See [ROADMAP.md](ROADMAP.md) for the 1.x → 2.0 migration.
 
 Then import the module:
 
