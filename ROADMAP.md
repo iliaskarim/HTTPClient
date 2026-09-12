@@ -6,7 +6,8 @@ This document outlines planned evolution of the package. **1.0** is the endpoint
 
 Stable, endpoint-driven API:
 
-- Conform to `Endpoint` to describe URL, method, headers, and optional JSON body.
+- Conform to `Endpoint` to describe a finished URL, method, headers, and optional JSON body.
+- Conform to `ComponentEndpoint` to assemble that URL from host, path, port, query, and scheme.
 - Execute with `endpoint.response()` / `endpoint.responsePublisher()`.
 - Pass `bearerToken` and `URLSession` per call when needed.
 - Custom JSON strategies via `CustomEncodable` / `CustomDecodable`.

@@ -1,10 +1,11 @@
 # HTTPClient
 
-A lightweight Swift package providing a generic, protocol-driven HTTP client. It offers a simple `Endpoint` abstraction, automatic JSON encoding/decoding with customizable strategies, and built-in logging for requests and responses.
+A lightweight Swift package providing a generic, protocol-driven HTTP client. It offers a simple `Endpoint` abstraction (finished URL, method, headers, body), a `ComponentEndpoint` for assembling a URL from pieces, automatic JSON encoding/decoding with customizable strategies, and built-in logging for requests and responses.
 
 ## Features
 
-* Define endpoints by conforming to `Endpoint`.
+* Define endpoints by conforming to `Endpoint` with a finished `URL`.
+* Conform to `ComponentEndpoint` when the URL should be assembled from host, path, port, query, and scheme.
 * Automatic construction of `URLRequest` from endpoint properties.
 * Async/await support for executing requests on Apple platforms and Linux.
 * Combine publisher support for executing requests on Apple platforms.
@@ -30,8 +31,20 @@ import HTTPClient
 
 ### Defining an Endpoint
 
+When the caller already has a finished URL, store it on `Endpoint`:
+
 ```swift
-struct UserEndpoint: Endpoint {
+struct FetchFileEndpoint: Endpoint {
+    typealias Response = Data
+
+    let url: URL
+}
+```
+
+When the URL should be assembled from pieces, conform to `ComponentEndpoint`:
+
+```swift
+struct UserEndpoint: ComponentEndpoint {
     struct Response: Decodable {
         let id: Int
         let name: String
@@ -53,7 +66,7 @@ For requests with a JSON body, use `Endpoint` with `Request: Encodable` and
 `let request: Request`.
 
 ```swift
-struct CreateUserEndpoint: Endpoint {
+struct CreateUserEndpoint: ComponentEndpoint {
     struct Request: Encodable {
         let name: String
     }
