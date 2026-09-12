@@ -123,6 +123,8 @@ Run the test suite with:
 swift test
 ```
 
+CI runs the same command on Linux (Swift 6.0) and macOS for every pull request.
+
 ## Contributing
 
 Contributions are welcome. Please open an issue before large changes so we can align on approach.
