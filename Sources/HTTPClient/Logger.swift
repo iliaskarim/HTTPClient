@@ -28,15 +28,20 @@ final class Logger: Sendable {
 
     private var priority: Int {
       switch self {
-      case .none: 0
+      case .none:
+        0
 
-      case .error: 1
+      case .error:
+        1
 
-      case .info: 2
+      case .info:
+        2
 
-      case .debug: 3
+      case .debug:
+        3
 
-      case .trace: 4
+      case .trace:
+        4
       }
     }
   }
