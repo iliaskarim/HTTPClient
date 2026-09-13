@@ -67,7 +67,7 @@ final class Logger: Sendable {
   /// `stdout` and also to ``os.Logger`` on Apple platforms or `stderr` on
   /// Linux. Transport errors get a customized message, and HTTP errors are
   /// intentionally ignored here because they are handled by
-  /// ``logResponse(_:data:for:)``.
+  /// ``logResponse(_:data:for:isAccepted404:)``.
   ///
   /// - Parameter error: The error to log.
   func logError(_ error: Error) {
@@ -118,9 +118,10 @@ final class Logger: Sendable {
 
   /// Emit details about an incoming ``HTTPURLResponse``.
   ///
-  /// - Error level: non-2xx status code and URL via ``logErrorMessage(_:)``
-  ///   (`stdout`, plus ``os.Logger`` on Apple platforms or `stderr` on Linux)
-  /// - Info level: 2xx status code and URL to `stdout`
+  /// - Error level: unexpected non-2xx status code and URL via
+  ///   ``logErrorMessage(_:)`` (`stdout`, plus ``os.Logger`` on Apple
+  ///   platforms or `stderr` on Linux). An accepted 404 is not an error.
+  /// - Info level: 2xx status code and URL to `stdout` (and accepted 404s)
   /// - Debug level: response body when non-empty
   /// - Trace level: response headers
   ///
@@ -128,14 +129,21 @@ final class Logger: Sendable {
   ///   - response: The response to log.
   ///   - data: The response body data.
   ///   - request: The original request associated with the response.
-  func logResponse(_ response: HTTPURLResponse, data: Data, for request: URLRequest) {
+  ///   - isAccepted404: When `true`, this response is logged as successful
+  ///     rather than an error.
+  func logResponse(
+    _ response: HTTPURLResponse,
+    data: Data,
+    for request: URLRequest,
+    isAccepted404: Bool
+  ) {
     guard logLevel > .none else {
       return
     }
 
     // INFO: log response status code and URL.
-    // ERROR: log response line if the status code is non-2xx.
-    if !response.isOK {
+    // ERROR: log response line if the status code is an unexpected non-2xx.
+    if !response.isOK, !isAccepted404 {
       logErrorMessage("\(response.statusCode) \(request)")
     } else if logLevel > .error {
       print("\(response.statusCode) \(request)")
