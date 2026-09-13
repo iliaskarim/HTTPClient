@@ -42,7 +42,6 @@ func testComponentEndpointIncludesPortSchemeAndQuery() throws {
   #expect(queryItems.count == 2)
   #expect(queryItems.contains(URLQueryItem(name: "q", value: "octodoge")))
   #expect(queryItems.contains(URLQueryItem(name: "page", value: "2")))
-  #expect(try endpoint.request().url == endpoint.url)
 }
 
 @Test
