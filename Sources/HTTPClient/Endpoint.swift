@@ -36,8 +36,8 @@ public protocol Endpoint: Sendable {
   /// The URL of the request.
   ///
   /// This property has no default value and must be provided. Conform to
-  /// ``ComponentEndpoint`` to assemble a URL from host, path, port, query,
-  /// and scheme.
+  /// ``ComponentEndpoint`` to assemble a URL from host, path, port, query, and
+  /// scheme.
   var url: URL { get }
 
   /// The UTF-8 body data for the HTTP request, if any.
