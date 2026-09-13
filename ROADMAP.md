@@ -1,27 +1,24 @@
 # HTTPClient roadmap
 
 This document outlines planned evolution of the package. **1.0** shipped the
-endpoint-first API with URL pieces on `Endpoint`. **2.0** is the breaking
-URL-first split: `Endpoint` requires a finished `URL`, and `ComponentEndpoint`
-owns host / path / port / query / scheme. **3.0** adds an optional execution
-context for shared configuration, authentication, and error hooks, without
-taking over concerns that belong in API packages (base URLs, path conventions)
-or apps (Keychain, UI session state).
+endpoint-first API. **2.0** is the breaking URL-first split: `Endpoint`
+requires a finished `URL`, and `ComponentEndpoint` owns host / path / port /
+query / scheme. **3.0** adds an optional execution context for shared
+configuration, authentication, and error hooks, without taking over concerns
+that belong in API packages (base URLs, path conventions) or apps (Keychain,
+UI session state).
 
 ## 1.0 (shipped)
 
 Stable, endpoint-driven API:
 
-- Conform to `Endpoint` to describe URL pieces (host, path, port, query,
-  scheme), method, headers, and optional JSON body.
+- Conform to `Endpoint` to describe URL, method, headers, and optional JSON body.
 - Execute with `endpoint.response()` / `endpoint.responsePublisher()`.
 - Pass `bearerToken` and `URLSession` per call when needed.
 - Custom JSON strategies via `CustomEncodable` / `CustomDecodable`.
 - Structured failures via `HTTPError` and built-in request/response logging.
 
-`JSONRequestEndpoint` was merged into `Endpoint` (`Request` associated type +
-defaults for encodable bodies). That was the breaking change that justified
-1.0.
+`JSONRequestEndpoint` was merged into `Endpoint` (`Request` associated type + defaults for encodable bodies). This is the breaking change that justified 1.0.
 
 ## 2.0 (current)
 
@@ -148,7 +145,7 @@ let user = try await client.response(for: FetchCurrentUserDetailEndpoint())
 
 | Version | Theme |
 |---------|--------|
-| **1.0** | Stable `Endpoint`-first API with URL pieces, Linux and Apple, docs and logging |
+| **1.0** | Stable `Endpoint`-first API, Linux and Apple, docs and logging |
 | **2.0** | URL-first `Endpoint` + `ComponentEndpoint` |
 | **3.0** | Optional `Client`, shared token/session, `onHTTPError` / `onUnauthorized` |
 | **4.0** | Only if we remove per-call `bearerToken` or make other breaking changes |
