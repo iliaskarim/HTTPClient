@@ -1,9 +1,9 @@
 /// A structured error type for HTTP endpoint responses.
 ///
-/// The error payload is decoded from the response body when the server
-/// returns an error status code. If the body cannot be decoded into the
-/// expected schema, ``payload`` will be `nil` but the ``statusCode``
-/// is always available.
+/// The error payload is decoded from the response body when the server returns
+/// an error status code. If the body cannot be decoded into the expected
+/// schema, ``payload`` will be `nil` but the ``statusCode`` is always
+/// available.
 public struct HTTPError: Error, Sendable {
   /// A structured error payload returned by the server.
   ///
@@ -17,16 +17,16 @@ public struct HTTPError: Error, Sendable {
       case message
     }
 
-    /// The machine-readable error identifier from the server (mapped from
-    /// the JSON `error` field), when present.
+    /// The machine-readable error identifier from the server (mapped from the
+    /// JSON `error` field), when present.
     public let code: String?
 
     /// The human-readable error message from the server.
     public let message: String
   }
 
-  /// The decoded error payload, if the response body was valid JSON with
-  /// the expected schema, or `nil` if decoding failed.
+  /// The decoded error payload, if the response body was valid JSON with the
+  /// expected schema, or `nil` if decoding failed.
   public let payload: Payload?
 
   /// The HTTP status code of the error response.

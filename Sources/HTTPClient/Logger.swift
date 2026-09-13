@@ -11,8 +11,8 @@ import OSLog
 /// The logger supports multiple verbosity levels controlled by the `LOG_LEVEL`
 /// environment variable or Info.plist entry. Request and successful response
 /// lines are written to `stdout`. Error-level messages (non-2xx status codes,
-/// transport failures, and similar) are also printed to `stdout`, and additionally
-/// sent to ``os.Logger`` on Apple platforms or `stderr` on Linux.
+/// transport failures, and similar) are also printed to `stdout`, and
+/// additionally sent to ``os.Logger`` on Apple platforms or `stderr` on Linux.
 final class Logger: Sendable {
   /// Verbosity level for the logger.
   ///
@@ -59,9 +59,10 @@ final class Logger: Sendable {
   /// Log an error-level event.
   ///
   /// Most errors are forwarded to ``logErrorMessage(_:)``, which writes to
-  /// `stdout` and also to ``os.Logger`` on Apple platforms or `stderr` on Linux.
-  /// Transport errors get a customized message, and HTTP errors are intentionally
-  /// ignored here because they are handled by ``logResponse(_:data:for:)``.
+  /// `stdout` and also to ``os.Logger`` on Apple platforms or `stderr` on
+  /// Linux. Transport errors get a customized message, and HTTP errors are
+  /// intentionally ignored here because they are handled by
+  /// ``logResponse(_:data:for:)``.
   ///
   /// - Parameter error: The error to log.
   func logError(_ error: Error) {
@@ -150,8 +151,8 @@ final class Logger: Sendable {
 
   /// Private initializer.
   ///
-  /// Reads the desired log level from the environment or
-  /// Info.plist so the behaviour is configurable without recompiling.
+  /// Reads the desired log level from the environment or Info.plist so the
+  /// behaviour is configurable without recompiling.
   private init() {
     logLevel = (ProcessInfo.processInfo.environment["LOG_LEVEL"]
       ?? Bundle.main.object(forInfoDictionaryKey: "LOG_LEVEL") as? String)
@@ -189,8 +190,8 @@ private extension [(String, String)] {
 }
 
 private extension Data {
-  /// Attempt to format the data as pretty‑printed JSON, falling back to a
-  /// UTF‑8 string or a placeholder if that fails. Used when logging bodies.
+  /// Attempt to format the data as pretty‑printed JSON, falling back to a UTF‑8
+  /// string or a placeholder if that fails. Used when logging bodies.
   ///
   /// - Returns: A formatted string representation of the data.
   var prettyPrintedString: String {
@@ -219,8 +220,8 @@ private extension HTTPURLResponse {
 private extension URLRequest {
   /// Headers represented as key/value string pairs for logging.
   ///
-  /// Converts Foundation's `allHTTPHeaderFields` dictionary into `(name,
-  /// value)` string pairs.
+  /// Converts Foundation's `allHTTPHeaderFields` dictionary into
+  /// `(name, value)` string pairs.
   var headerPairs: [(String, String)] {
     allHTTPHeaderFields?.map { ($0.key, $0.value) } ?? []
   }

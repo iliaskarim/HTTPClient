@@ -4,8 +4,8 @@ import FoundationNetworking
 #endif
 
 extension Endpoint {
-  /// Validate an HTTP response and throw an ``HTTPError`` if the status
-  /// code is non-2xx.
+  /// Validate an HTTP response and throw an ``HTTPError`` if the status code is
+  /// non-2xx.
   ///
   /// Logs the response details and parses error payloads if available.
   ///
