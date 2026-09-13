@@ -2,8 +2,6 @@
 
 A lightweight Swift package providing a generic, protocol-driven HTTP client. It offers a simple `Endpoint` abstraction, automatic JSON encoding/decoding with customizable strategies, and built-in logging for requests and responses.
 
-**[Documentation](https://httpclient.iliaskarim.org/)**
-
 ## Features
 
 * Define endpoints by conforming to `Endpoint`.
@@ -116,6 +114,10 @@ export LOG_LEVEL=trace
 ```
 
 Request/response details and bodies are written to stdout. On Apple platforms, error-level messages are sent to the system logging facility via `os.Logger` so they appear in Console.app and respect system privacy settings. On Linux, error-level messages are written directly to `stderr`.
+
+## Documentation
+
+API documentation is available at [httpclient.iliaskarim.org](https://httpclient.iliaskarim.org/).
 
 ## Testing
 
