@@ -62,8 +62,7 @@ struct UserEndpoint: ComponentEndpoint {
 }
 ```
 
-For requests with a JSON body, use `Endpoint` with `Request: Encodable` and
-`let request: Request`.
+For requests with a JSON body, use `Endpoint` with `Request: Encodable` and `let request: Request`.
 
 ```swift
 struct CreateUserEndpoint: ComponentEndpoint {
@@ -130,9 +129,7 @@ Request/response details and bodies are written to stdout. On Apple platforms, e
 
 ## Migrating from 1.x
 
-2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt
-`ComponentEndpoint` if you still build the URL from host, path, port, query,
-and scheme.
+2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt `ComponentEndpoint` if you still build the URL from host, path, port, query, and scheme.
 
 | 1.x | 2.0 |
 |-----|-----|
@@ -140,8 +137,7 @@ and scheme.
 | Split a finished URL into host / path / port / query / scheme | Store `url` on `Endpoint` |
 | `PagedEndpoint` / `SortedEndpoint` wrap `Endpoint` pieces | Stay `ComponentEndpoint`; do not wrap URL-only endpoints |
 
-Existing 1.x `Endpoint` conformers that only provided URL pieces will not
-compile until they adopt `ComponentEndpoint`.
+Existing 1.x `Endpoint` conformers that only provided URL pieces will not compile until they adopt `ComponentEndpoint`.
 
 ## Testing
 

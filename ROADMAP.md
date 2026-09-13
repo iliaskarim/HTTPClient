@@ -1,12 +1,6 @@
 # HTTPClient roadmap
 
-This document outlines planned evolution of the package. **1.0** shipped the
-endpoint-first API. **2.0** is the breaking URL-first split: `Endpoint`
-requires a finished `URL`, and `ComponentEndpoint` owns host / path / port /
-query / scheme. **3.0** adds an optional execution context for shared
-configuration, authentication, and error hooks, without taking over concerns
-that belong in API packages (base URLs, path conventions) or apps (Keychain,
-UI session state).
+This document outlines planned evolution of the package. **1.0** shipped the endpoint-first API. **2.0** is the breaking URL-first split: `Endpoint` requires a finished `URL`, and `ComponentEndpoint` owns host / path / port / query / scheme. **3.0** adds an optional execution context for shared configuration, authentication, and error hooks, without taking over concerns that belong in API packages (base URLs, path conventions) or apps (Keychain, UI session state).
 
 ## 1.0 (shipped)
 
@@ -22,40 +16,27 @@ Stable, endpoint-driven API:
 
 ## 2.0 (current)
 
-Breaking protocol split so finished-URL callers and piece-based REST callers
-no longer share the same required surface.
+Breaking protocol split so finished-URL callers and piece-based REST callers no longer share the same required surface.
 
 - `Endpoint` requires `url`, method, headers, and optional body.
-- `ComponentEndpoint` owns `urlHost`, `urlPath`, `urlPort`, `urlQueryItems`,
-  and `urlScheme`, with a default `url` that assembles them.
-- `request()` builds `URLRequest` from `url` instead of reassembling from
-  pieces.
+- `ComponentEndpoint` owns `urlHost`, `urlPath`, `urlPort`, `urlQueryItems`, and `urlScheme`, with a default `url` that assembles them.
+- `request()` builds `URLRequest` from `url` instead of reassembling from pieces.
 
 ## 3.0 (planned)
 
-Introduce a small **coordinator type** (working name `Client`, alternatives
-`APIClient` or `Session`) that owns shared request context and centralizes
-execution. Endpoints remain the primary abstraction. The coordinator is
-optional sugar for apps that today wrap every call (e.g.,
-`UserSession.response(for:)` + manual `bearerToken` threading).
+Introduce a small **coordinator type** (working name `Client`, alternatives `APIClient` or `Session`) that owns shared request context and centralizes execution. Endpoints remain the primary abstraction. The coordinator is optional sugar for apps that today wrap every call (e.g., `UserSession.response(for:)` + manual `bearerToken` threading).
 
 ### Goals
 
-- Inject **bearer token** (or a token provider) once instead of on every
-  `response(bearerToken:)`.
+- Inject **bearer token** (or a token provider) once instead of on every `response(bearerToken:)`.
 - Own a **`URLSession`** instance for testing and configuration.
-- Invoke **`onHTTPError`** / **`onUnauthorized`** hooks so apps can react to
-  non-2xx responses (logout, refresh, analytics) without reimplementing
-  try/catch around every call.
-- Provide **`response(for:)`** (and Combine equivalents) mirroring today’s
-  `Endpoint` extensions.
-- Keep **2.x call sites working**: `Endpoint.response(bearerToken:)` remains
-  available. Migration is opt-in.
+- Invoke **`onHTTPError`** / **`onUnauthorized`** hooks so apps can react to non-2xx responses (logout, refresh, analytics) without reimplementing try/catch around every call.
+- Provide **`response(for:)`** (and Combine equivalents) mirroring today’s `Endpoint` extensions.
+- Keep **2.x call sites working**: `Endpoint.response(bearerToken:)` remains available. Migration is opt-in.
 
 ### Out of scope for HTTPClient
 
-These stay in downstream packages or the app layer (see
-[GitHubClient](https://github.com/iliaskarim/GitHubClient) usage):
+These stay in downstream packages or the app layer (see [GitHubClient](https://github.com/iliaskarim/GitHubClient) usage):
 
 | Concern | Example in the wild |
 |--------|---------------------|
