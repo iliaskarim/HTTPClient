@@ -68,6 +68,51 @@ public extension Endpoint where Response == Void {
       .map { _ in }
       .eraseToAnyPublisher()
   }
+
+  /// Obtain a publisher that treats HTTP 404 as a successful negative.
+  ///
+  /// Use this for existence checks and idempotent deletes where the server
+  /// uses 404 to mean “already absent.” A 404 is not logged as an error.
+  ///
+  /// - Parameters:
+  ///   - session: The ``URLSession`` to use for the request. Defaults to the
+  ///     shared session.
+  ///   - bearerToken: An optional bearer token for the `Authorization`
+  ///     header.
+  /// - Returns: A publisher that emits `true` on 2xx and `false` on 404, or
+  ///   fails with ``HTTPError`` for any other non-2xx status, ``URLError``
+  ///   for transport failures, or any error thrown from ``httpBody()``.
+  func responsePublisherTreatingNotFoundAsFalse(
+    using session: URLSession = .shared,
+    bearerToken: String? = nil
+  ) -> AnyPublisher<Bool, Error> {
+    Deferred {
+      Future<URLRequest, Error> { promise in
+        do {
+          try promise(.success(self.request(bearerToken: bearerToken)))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+    .flatMap { request in
+      session.dataTaskPublisher(for: request)
+        .tryMap { data, response in
+          let httpResponse = try handleResponse(
+            data: data,
+            response: response,
+            request: request,
+            treatingNotFoundAsSuccess: true
+          )
+          return httpResponse.statusCode != 404
+        }
+        .mapError { error in
+          Logger.shared.logError(error)
+          return error
+        }
+    }
+    .eraseToAnyPublisher()
+  }
 }
 
 private extension Endpoint {
@@ -101,7 +146,12 @@ private extension Endpoint {
     .flatMap { request in
       session.dataTaskPublisher(for: request)
         .tryMap { data, response in
-          try handleResponse(data: data, response: response, request: request)
+          try handleResponse(
+            data: data,
+            response: response,
+            request: request,
+            treatingNotFoundAsSuccess: false
+          )
           return data
         }
         .mapError { error in
