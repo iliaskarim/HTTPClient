@@ -3,6 +3,12 @@ name: Deploy docs
 on:
   push:
     branches: [main]
+    paths:
+      - "Sources/**/*.swift"
+      - Package.swift
+      - scripts/build-docs
+      - scripts/upload-docs
+      - .github/workflows/deploy-docs.yml
   workflow_dispatch:
 
 permissions:
