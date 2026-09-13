@@ -5,6 +5,9 @@ import Foundation
 /// Conforming types define an endpoint's request details (URL, method, headers,
 /// and request body) and associated ``Response`` type (decoded response body).
 ///
+/// Provide a finished ``url`` when the caller already has one. To build a URL
+/// from host, path, port, query, and scheme, conform to ``ComponentEndpoint``.
+///
 /// When ``Request`` is ``Encodable``, default ``httpBody()``, ``httpMethod``,
 /// and ``httpHeaderFields`` encode JSON and use POST; when ``Request`` is
 /// ``Void``, the body is omitted and GET defaults apply.
@@ -30,30 +33,12 @@ public protocol Endpoint: Sendable {
   /// Default is `Void`.
   var request: Request { get }
 
-  /// The host component of the URL (e.g., "api.example.com").
+  /// The URL of the request.
   ///
-  /// This property has no default value and must be provided.
-  var urlHost: String { get }
-
-  /// The path component of the URL (e.g., "/users/123").
-  ///
-  /// Default is `"/"`.
-  var urlPath: String { get }
-
-  /// The optional port number for the URL.
-  ///
-  /// Default is `nil` (uses the default port for the scheme).
-  var urlPort: Int? { get }
-
-  /// The query parameters to append to the URL.
-  ///
-  /// Default is an empty dictionary.
-  var urlQueryItems: [String: String] { get }
-
-  /// The scheme component of the URL (e.g., "https", "http").
-  ///
-  /// Default is `"https"`.
-  var urlScheme: String { get }
+  /// This property has no default value and must be provided. Conform to
+  /// ``ComponentEndpoint`` to assemble a URL from host, path, port, query, and
+  /// scheme.
+  var url: URL { get }
 
   /// The UTF-8 body data for the HTTP request, if any.
   ///
@@ -75,34 +60,6 @@ public extension Endpoint {
   /// Default is `"GET"`.
   var httpMethod: String {
     "GET"
-  }
-
-  /// The path component of the URL.
-  ///
-  /// Default is `"/"`.
-  var urlPath: String {
-    "/"
-  }
-
-  /// The optional port number for the URL.
-  ///
-  /// Default is `nil` (uses the default port for the scheme).
-  var urlPort: Int? {
-    nil
-  }
-
-  /// The scheme component of the URL.
-  ///
-  /// Default is `"https"`.
-  var urlScheme: String {
-    "https"
-  }
-
-  /// The query parameters to append to the URL.
-  ///
-  /// Default is an empty dictionary.
-  var urlQueryItems: [String: String] {
-    [:]
   }
 
   /// The UTF-8 body data for the HTTP request, if any.

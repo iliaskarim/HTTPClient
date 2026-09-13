@@ -4,8 +4,8 @@ import FoundationNetworking
 #endif
 
 extension Endpoint {
-  /// Validate an HTTP response and throw an ``HTTPError`` if the status
-  /// code is non-2xx.
+  /// Validate an HTTP response and throw an ``HTTPError`` if the status code is
+  /// non-2xx.
   ///
   /// Logs the response details and parses error payloads if available.
   ///
@@ -32,30 +32,16 @@ extension Endpoint {
 
   /// Construct a ``URLRequest`` from the endpoint's properties.
   ///
-  /// Builds the URL from components, sets headers, attaches the body, and
-  /// optionally adds a bearer token for authentication.
+  /// Uses ``Endpoint/url``, sets headers, attaches the body, and optionally
+  /// adds a bearer token for authentication.
   ///
   /// Logs the request details.
   ///
   /// - Parameter bearerToken: An optional bearer token for the
   ///   `Authorization` header.
   /// - Returns: A fully constructed ``URLRequest`` ready to be executed.
-  /// - Throws: ``URLError`` if the URL cannot be constructed from the
-  ///   endpoint's properties, or any error thrown from ``httpBody()``.
+  /// - Throws: Any error thrown from ``httpBody()``.
   func request(bearerToken: String? = nil) throws -> URLRequest {
-    var components = URLComponents()
-    components.host = urlHost
-    components.port = urlPort
-    components.path = urlPath
-    components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
-      URLQueryItem(name: $0.key, value: $0.value)
-    }
-    components.scheme = urlScheme
-
-    guard let url = components.url else {
-      throw URLError(.badURL)
-    }
-
     var request = URLRequest(url: url)
     httpHeaderFields.forEach {
       request.setValue($1, forHTTPHeaderField: $0)

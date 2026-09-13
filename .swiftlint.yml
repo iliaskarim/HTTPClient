@@ -3,23 +3,57 @@ disabled_rules:
   - force_cast
   - force_try
   - function_body_length
+  - function_parameter_count
   - identifier_name
   - file_length
+  - large_tuple
   - leading_whitespace
   - static_over_final_class
+  - type_body_length
   - type_name
-  - unused_enumerated
+
+opt_in_rules:
+  - attributes
+  # Same as SwiftFormat blankLineAfterSwitchCase always. One-liners may
+  # stay packed here; SF still inserts the blank.
+  - vertical_whitespace_between_cases
+  # Same as SwiftFormat wrapCaseBodies (no autocorrect).
+  - switch_case_on_newline
+  # Parameters with defaults after required ones (no autocorrect).
+  - function_default_parameter_at_end
+
+# Analyzer rules need `swiftlint analyze` plus an xcodebuild log (macOS).
+# `swiftlint lint` and the Ubuntu Lint workflow do not run them.
+# Run `bash scripts/swiftlint-analyze` (`clean build-for-testing`).
+# unused_declaration defaults to error; keep it a warning.
+# SourceKit misses `appDelegate` (protocol dispatch; #3763). That
+# site uses `// swiftlint:disable:this unused_declaration`.
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+
+unused_declaration:
+  severity: warning
 
 line_length:
   warning: 110
+  excluded_lines_patterns:
+    - '^\s*///.*https?://'
 
 nesting:
   function_level: 1
-  type_level: 4
+  type_level: 3
 
 trailing_whitespace:
   severity: error
 
+non_optional_string_data_conversion:
+  severity: error
+  include_variables: true
+
 excluded:
   - .build
+  - GitHubAPI/.build
+  - Packages
   - Package.swift
+  - build
