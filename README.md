@@ -127,6 +127,10 @@ export LOG_LEVEL=trace
 
 Request/response details and bodies are written to stdout. On Apple platforms, error-level messages are sent to the system logging facility via `os.Logger` so they appear in Console.app and respect system privacy settings. On Linux, error-level messages are written directly to `stderr`.
 
+## Documentation
+
+API documentation is available at [httpclient.iliaskarim.org](https://httpclient.iliaskarim.org/).
+
 ## Migrating from 1.x
 
 2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt `ComponentEndpoint` if you still build the URL from host, path, port, query, and scheme.
@@ -158,14 +162,6 @@ Contributions are welcome. Please open an issue before large changes so we can a
 3. Run `swift build` and `swift test` to confirm everything passes.
 4. Match existing code style and add doc comments for new public API.
 5. Open a pull request with a short description of what changed and why.
-
-To rebuild the documentation site locally (macOS with Xcode installed):
-
-```bash
-./scripts/build-docs
-```
-
-Output is written to `./docs` (not committed).
 
 See [ROADMAP.md](ROADMAP.md) for planned changes.
 

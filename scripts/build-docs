@@ -1,21 +1,41 @@
 #!/bin/bash
-set -ex
+set -euo pipefail
 
-# toolchain paths – adjust if Xcode is installed elsewhere
-DOCC="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/docc"
+# Use the active Xcode toolchain (local or GitHub Actions).
+DOCC="${DOCC:-$(xcrun --find docc)}"
 
-# derive scheme name from the current directory (assumes project directory
-# name matches the product/scheme name).
-SCHEME="$(basename "$(pwd)")"
+# Scheme matches the package/product name. Override with SCHEME= when the
+# checkout directory is not named HTTPClient.
+SCHEME="${SCHEME:-$(basename "$(pwd)")}"
+DESTINATION="${DESTINATION:-generic/platform=macOS}"
 
-# clean docs
 rm -rf .build build docs
 
-# build docs
-xcodebuild docbuild \
-    -scheme "$SCHEME" \
-    -destination 'platform=macOS,arch=arm64,name=My Mac' \
-    -derivedDataPath build > /dev/null
-$DOCC process-archive transform-for-static-hosting \
+xcodebuild_args=(
+  docbuild
+  -scheme "$SCHEME"
+  -destination "$DESTINATION"
+  -derivedDataPath build
+)
+
+if [[ -n "${CI:-}" ]]; then
+  xcodebuild "${xcodebuild_args[@]}"
+else
+  xcodebuild "${xcodebuild_args[@]}" > /dev/null
+fi
+
+ARCHIVE="$(find build -name "${SCHEME}.doccarchive" -print -quit)"
+if [[ -z "$ARCHIVE" ]]; then
+  echo "error: ${SCHEME}.doccarchive not found under ./build" >&2
+  exit 1
+fi
+
+if [[ -n "${CI:-}" ]]; then
+  "$DOCC" process-archive transform-for-static-hosting \
     --output-path ./docs \
-    "./build/Build/Products/Debug/$SCHEME.doccarchive" > /dev/null
+    "$ARCHIVE"
+else
+  "$DOCC" process-archive transform-for-static-hosting \
+    --output-path ./docs \
+    "$ARCHIVE" > /dev/null
+fi

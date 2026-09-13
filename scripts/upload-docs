@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BUCKET="${HTTPCLIENT_S3_BUCKET:-httpclient.iliaskarim.org}"
+DISTRIBUTION_ID="${CLOUDFRONT_DISTRIBUTION_ID:-E3ELNGKSYELRW6}"
+
+if ! command -v aws >/dev/null 2>&1; then
+  echo "error: aws CLI is not installed (https://aws.amazon.com/cli/)" >&2
+  exit 1
+fi
+
+if [[ ! -d "$ROOT/docs" ]] || [[ -z "$(find "$ROOT/docs" -type f -print -quit)" ]]; then
+  echo "error: ./docs is missing or empty; run ./scripts/build-docs first" >&2
+  exit 1
+fi
+
+aws_args=()
+if [[ -n "${AWS_PROFILE:-}" ]]; then
+  aws_args+=(--profile "$AWS_PROFILE")
+fi
+
+echo "Syncing $ROOT/docs -> s3://$BUCKET/docs/"
+# Same include/exclude set as the previous HTTPClient-docs sync so CloudFront
+# (origin path /docs) keeps serving /documentation/httpclient/.
+aws s3 sync ${aws_args+"${aws_args[@]}"} "$ROOT/" "s3://$BUCKET/" \
+  --delete \
+  --exclude "*" \
+  --exclude "**/.git/**" \
+  --include "docs/**"
+
+if [[ -n "$DISTRIBUTION_ID" ]]; then
+  echo "Creating CloudFront invalidation for /*"
+  aws cloudfront create-invalidation ${aws_args+"${aws_args[@]}"} \
+    --distribution-id "$DISTRIBUTION_ID" \
+    --paths "/*" \
+    --output text \
+    --query 'Invalidation.Id'
+fi
+
+echo "Done. https://$BUCKET"
