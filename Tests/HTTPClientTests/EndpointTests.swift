@@ -45,8 +45,8 @@ import Testing
 
   #expect(endpoint.urlPath == "/")
   #expect(endpoint.urlPort == nil)
-  #expect(endpoint.urlScheme == "https")
   #expect(endpoint.urlQueryItems.isEmpty)
+  #expect(endpoint.urlScheme == "https")
   #expect(endpoint.url == URL(string: "https://api.example.com/")!)
 }
 

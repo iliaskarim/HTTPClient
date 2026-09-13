@@ -47,18 +47,18 @@ public extension ComponentEndpoint {
     nil
   }
 
-  /// The scheme component of the URL.
-  ///
-  /// Default is `"https"`.
-  var urlScheme: String {
-    "https"
-  }
-
   /// The query parameters to append to the URL.
   ///
   /// Default is an empty dictionary.
   var urlQueryItems: [String: String] {
     [:]
+  }
+
+  /// The scheme component of the URL.
+  ///
+  /// Default is `"https"`.
+  var urlScheme: String {
+    "https"
   }
 
   /// The URL assembled from the endpoint's URL components.
