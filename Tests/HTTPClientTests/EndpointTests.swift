@@ -6,7 +6,9 @@ import Testing
 @testable import HTTPClient
 
 @Test func testFinishedURLEndpointPreservesURL() throws {
-  let finished = URL(string: "https://raw.githubusercontent.com/owner/repo/main/file%20name.txt?token=abc#L10")!
+  let finished = try #require(
+    URL(string: "https://raw.githubusercontent.com/owner/repo/main/file%20name.txt?token=abc#L10")
+  )
   let endpoint = FinishedURLEndpoint(url: finished)
 
   #expect(endpoint.url == finished)
@@ -40,18 +42,19 @@ import Testing
   #expect(try endpoint.request().url == endpoint.url)
 }
 
-@Test func testComponentEndpointDefaults() {
+@Test func testComponentEndpointDefaults() throws {
   let endpoint = HostOnlyEndpoint()
+  let expected = try #require(URL(string: "https://api.example.com/"))
 
   #expect(endpoint.urlPath == "/")
   #expect(endpoint.urlPort == nil)
   #expect(endpoint.urlQueryItems.isEmpty)
   #expect(endpoint.urlScheme == "https")
-  #expect(endpoint.url == URL(string: "https://api.example.com/")!)
+  #expect(endpoint.url == expected)
 }
 
 @Test func testRequestUsesFinishedURLWithoutReassembly() throws {
-  let finished = URL(string: "https://objects.githubusercontent.com/lfs/oid?token=xyz")!
+  let finished = try #require(URL(string: "https://objects.githubusercontent.com/lfs/oid?token=xyz"))
   let request = try FetchURLDataEndpoint(
     url: finished,
     httpHeaderFields: ["Accept": "application/vnd.git-lfs+json"]
