@@ -1,8 +1,8 @@
 # HTTPClient roadmap
 
-This document outlines planned evolution of the package. **1.0** is the endpoint-first API shipped today. **2.0** adds an optional execution context for shared configuration, authentication, and error hooks, without taking over concerns that belong in API packages (base URLs, path conventions) or apps (Keychain, UI session state).
+This document outlines planned evolution of the package. **1.0** shipped the endpoint-first API. **2.0** is the breaking URL-first split: `Endpoint` requires a finished `URL`, and `ComponentEndpoint` owns host / path / port / query / scheme. **3.0** adds an optional execution context for shared configuration, authentication, and error hooks, without taking over concerns that belong in API packages (base URLs, path conventions) or apps (Keychain, UI session state).
 
-## 1.0 (current)
+## 1.0 (shipped)
 
 Stable, endpoint-driven API:
 
@@ -14,7 +14,15 @@ Stable, endpoint-driven API:
 
 `JSONRequestEndpoint` was merged into `Endpoint` (`Request` associated type + defaults for encodable bodies). This is the breaking change that justified 1.0.
 
-## 2.0 (planned)
+## 2.0 (current)
+
+Breaking protocol split so finished-URL callers and piece-based REST callers no longer share the same required surface.
+
+- `Endpoint` requires `url`, method, headers, and optional body.
+- `ComponentEndpoint` owns `urlHost`, `urlPath`, `urlPort`, `urlQueryItems`, and `urlScheme`, with a default `url` that assembles them.
+- `request()` builds `URLRequest` from `url` instead of reassembling from pieces.
+
+## 3.0 (planned)
 
 Introduce a small **coordinator type** (working name `Client`, alternatives `APIClient` or `Session`) that owns shared request context and centralizes execution. Endpoints remain the primary abstraction. The coordinator is optional sugar for apps that today wrap every call (e.g., `UserSession.response(for:)` + manual `bearerToken` threading).
 
@@ -24,7 +32,7 @@ Introduce a small **coordinator type** (working name `Client`, alternatives `API
 - Own a **`URLSession`** instance for testing and configuration.
 - Invoke **`onHTTPError`** / **`onUnauthorized`** hooks so apps can react to non-2xx responses (logout, refresh, analytics) without reimplementing try/catch around every call.
 - Provide **`response(for:)`** (and Combine equivalents) mirroring today’s `Endpoint` extensions.
-- Keep **1.x call sites working**: `Endpoint.response(bearerToken:)` remains available. Migration is opt-in.
+- Keep **2.x call sites working**: `Endpoint.response(bearerToken:)` remains available. Migration is opt-in.
 
 ### Out of scope for HTTPClient
 
@@ -37,7 +45,6 @@ These stay in downstream packages or the app layer (see [GitHubClient](https://g
 | Pagination wrappers | `PagedEndpoint` in GitHubAPI |
 | Token persistence | `AccessTokenStore` (Keychain) |
 | Session UI and lifecycle | `@MainActor` `UserSession`, `sessionExpired`, `@Published` user |
-| App-specific HTTP semantics | Void overload treating 404 as `false`, markdown rendering helpers |
 | DEBUG delays / fault injection | `DEBUG_HTTP_DELAY_SECONDS`, etc. |
 
 ### Proposed API (draft)
@@ -89,28 +96,28 @@ let client = Client(
 let user = try await client.response(for: FetchCurrentUserDetailEndpoint())
 ```
 
-### Optional follow-ups (2.0 or later)
+### Optional follow-ups (3.0 or later)
 
 - **`bearerToken` as `@Sendable () -> String?`** for refresh flows without recreating the client.
 - **Default URL components** on the client (host/scheme/port) merged with endpoint properties, for staging vs production without duplicating every endpoint. Not required if API packages keep host defaults (e.g., `GitHubEndpoint`).
-- **Deprecate** per-call `bearerToken` on `Endpoint.response` in favor of `Client` only if we want a single recommended style (soft deprecation in 2.0, removal in 3.0).
+- **Deprecate** per-call `bearerToken` on `Endpoint.response` in favor of `Client` only if we want a single recommended style (soft deprecation in 3.0, removal in 4.0).
 
 ### Migration (GitHubClient-shaped)
 
-| Today | After 2.0 |
+| Today | After 3.0 |
 |-------|-----------|
-| `GitHubEndpoint` provides `urlHost` | Unchanged (GitHubAPI) |
+| `GitHubEndpoint` provides `urlHost` | Unchanged (`ComponentEndpoint` in GitHubAPI) |
 | `UserSession.response(for:)` + 401 handling | Thin wrapper (Keychain + UI), delegating to `Client` |
-| `GroupedCommitsPager.bearerToken` | Hold `Client` or `UserSession`, with no manual token on pager |
-| `endpoint.response(bearerToken:)` | `client.response(for: endpoint)` or keep 1.x API |
+| `endpoint.response(bearerToken:)` | `client.response(for: endpoint)` or keep 2.x API |
 
 ## Versioning
 
 | Version | Theme |
 |---------|--------|
 | **1.0** | Stable `Endpoint`-first API, Linux and Apple, docs and logging |
-| **2.0** | Optional `Client`, shared token/session, `onHTTPError` / `onUnauthorized` |
-| **3.0** | Only if we remove per-call `bearerToken` or make other breaking changes |
+| **2.0** | URL-first `Endpoint` + `ComponentEndpoint` |
+| **3.0** | Optional `Client`, shared token/session, `onHTTPError` / `onUnauthorized` |
+| **4.0** | Only if we remove per-call `bearerToken` or make other breaking changes |
 
 ## Open questions
 

@@ -2,7 +2,8 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Test func testISO8601DateDecodingStrategy() async throws {
+@Test
+func testISO8601DateDecodingStrategy() {
   let decoder = JSONDecoder()
   ISO8601DateDecodingStrategy.shared.apply(to: decoder)
   let isISO8601 = switch decoder.dateDecodingStrategy {
