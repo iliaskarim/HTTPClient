@@ -30,7 +30,7 @@ func testComponentEndpointAssemblesURLFromPieces() throws {
 }
 
 @Test
-func testComponentEndpointIncludesPortSchemeAndQuery() throws {
+func testComponentEndpointIncludesPortSchemeAndQuery() {
   let endpoint = LocalSearchEndpoint()
   let components = URLComponents(url: endpoint.url, resolvingAgainstBaseURL: false)
 
