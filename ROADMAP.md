@@ -64,7 +64,6 @@ These stay in downstream packages or the app layer (see
 | Pagination wrappers | `PagedEndpoint` in GitHubAPI |
 | Token persistence | `AccessTokenStore` (Keychain) |
 | Session UI and lifecycle | `@MainActor` `UserSession`, `sessionExpired`, `@Published` user |
-| App-specific HTTP semantics | Void overload treating 404 as `false`, markdown rendering helpers |
 | DEBUG delays / fault injection | `DEBUG_HTTP_DELAY_SECONDS`, etc. |
 
 ### Proposed API (draft)
