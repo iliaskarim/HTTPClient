@@ -23,10 +23,6 @@ dependencies: [
 ]
 ```
 
-2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt
-`ComponentEndpoint` if you still build the URL from host, path, port, query,
-and scheme. See [ROADMAP.md](ROADMAP.md) for the 1.x → 2.0 migration.
-
 Then import the module:
 
 ```swift
@@ -131,6 +127,21 @@ export LOG_LEVEL=trace
 ```
 
 Request/response details and bodies are written to stdout. On Apple platforms, error-level messages are sent to the system logging facility via `os.Logger` so they appear in Console.app and respect system privacy settings. On Linux, error-level messages are written directly to `stderr`.
+
+## Migrating from 1.x
+
+2.0 is a breaking release. `Endpoint` now requires a finished `URL`. Adopt
+`ComponentEndpoint` if you still build the URL from host, path, port, query,
+and scheme.
+
+| 1.x | 2.0 |
+|-----|-----|
+| Conform to `Endpoint` and supply `urlHost` | Conform to `ComponentEndpoint` (same pieces, default `url`) |
+| Split a finished URL into host / path / port / query / scheme | Store `url` on `Endpoint` |
+| `PagedEndpoint` / `SortedEndpoint` wrap `Endpoint` pieces | Stay `ComponentEndpoint`; do not wrap URL-only endpoints |
+
+Existing 1.x `Endpoint` conformers that only provided URL pieces will not
+compile until they adopt `ComponentEndpoint`.
 
 ## Testing
 

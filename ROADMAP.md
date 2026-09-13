@@ -31,17 +31,6 @@ no longer share the same required surface.
 - `request()` builds `URLRequest` from `url` instead of reassembling from
   pieces.
 
-### Migration
-
-| 1.x | 2.0 |
-|-----|-----|
-| Conform to `Endpoint` and supply `urlHost` | Conform to `ComponentEndpoint` (same pieces, default `url`) |
-| Split a finished URL into host / path / port / query / scheme | Store `url` on `Endpoint` |
-| `PagedEndpoint` / `SortedEndpoint` wrap `Endpoint` pieces | Stay `ComponentEndpoint`; do not wrap URL-only endpoints |
-
-Existing 1.x `Endpoint` conformers that only provided URL pieces will not
-compile until they adopt `ComponentEndpoint`.
-
 ## 3.0 (planned)
 
 Introduce a small **coordinator type** (working name `Client`, alternatives
