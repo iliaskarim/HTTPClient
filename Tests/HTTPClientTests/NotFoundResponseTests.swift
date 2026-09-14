@@ -15,6 +15,16 @@ private struct VoidEndpoint: ComponentEndpoint {
   }
 }
 
+private struct ExistenceEndpoint: ComponentEndpoint, TreatsNotFoundAsFalse {
+  var urlHost: String {
+    "example.com"
+  }
+
+  var urlPath: String {
+    "/resource"
+  }
+}
+
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
   nonisolated(unsafe) static var statusCode = 200
 
@@ -68,24 +78,24 @@ private func stubSession() -> URLSession {
 @Suite(.serialized)
 struct NotFoundResponseTests {
   @Test
-  func treatingNotFoundAsFalseReturnsTrueOn2xx() async throws {
+  func treatsNotFoundAsFalseReturnsTrueOn2xx() async throws {
     StubURLProtocol.setResponse(statusCode: 204)
-    let exists = try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
+    let exists = try await ExistenceEndpoint().response(using: stubSession())
     #expect(exists)
   }
 
   @Test
-  func treatingNotFoundAsFalseReturnsFalseOn404() async throws {
+  func treatsNotFoundAsFalseReturnsFalseOn404() async throws {
     StubURLProtocol.setResponse(statusCode: 404)
-    let exists = try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
+    let exists = try await ExistenceEndpoint().response(using: stubSession())
     #expect(!exists)
   }
 
   @Test
-  func treatingNotFoundAsFalseThrowsOnOtherClientError() async {
+  func treatsNotFoundAsFalseThrowsOnOtherClientError() async {
     StubURLProtocol.setResponse(statusCode: 403)
     await #expect(throws: HTTPError.self) {
-      try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
+      _ = try await ExistenceEndpoint().response(using: stubSession())
     }
   }
 
@@ -98,10 +108,10 @@ struct NotFoundResponseTests {
   }
 
   @Test
-  func treatingNotFoundAsFalsePreservesHTTPErrorStatusCode() async {
+  func treatsNotFoundAsFalsePreservesHTTPErrorStatusCode() async {
     StubURLProtocol.setResponse(statusCode: 500)
     do {
-      _ = try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
+      _ = try await ExistenceEndpoint().response(using: stubSession())
       Issue.record("Expected HTTPError")
     } catch let error as HTTPError {
       #expect(error.statusCode == 500)

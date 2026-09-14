@@ -52,6 +52,9 @@ public extension Endpoint where Response == Data {
 public extension Endpoint where Response == Void {
   /// Obtain a publisher that executes the request and emits `Void`.
   ///
+  /// To treat HTTP 404 as a successful `false`, conform to
+  /// ``TreatsNotFoundAsFalse`` instead.
+  ///
   /// - Parameters:
   ///   - session: The ``URLSession`` to use for the request. Defaults to the
   ///     shared session.
@@ -68,11 +71,12 @@ public extension Endpoint where Response == Void {
       .map { _ in }
       .eraseToAnyPublisher()
   }
+}
 
+public extension TreatsNotFoundAsFalse {
   /// Obtain a publisher that treats HTTP 404 as a successful negative.
   ///
-  /// Use this for existence checks and idempotent deletes where the server
-  /// uses 404 to mean “already absent.” A 404 is not logged as an error.
+  /// A 404 is not logged as an error.
   ///
   /// - Parameters:
   ///   - session: The ``URLSession`` to use for the request. Defaults to the
@@ -82,7 +86,7 @@ public extension Endpoint where Response == Void {
   /// - Returns: A publisher that emits `true` on 2xx and `false` on 404, or
   ///   fails with ``HTTPError`` for any other non-2xx status, ``URLError``
   ///   for transport failures, or any error thrown from ``httpBody()``.
-  func responsePublisherTreatingNotFoundAsFalse(
+  func responsePublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
   ) -> AnyPublisher<Bool, Error> {
@@ -112,6 +116,16 @@ public extension Endpoint where Response == Void {
         }
     }
     .eraseToAnyPublisher()
+  }
+
+  /// The inherited Void ``Endpoint/responsePublisher(using:bearerToken:)`` is
+  /// unavailable so a discarded publisher cannot throw on 404.
+  @available(*, unavailable, message: "Assign the Bool publisher result.")
+  func responsePublisher(
+    using _: URLSession = .shared,
+    bearerToken _: String? = nil
+  ) -> AnyPublisher<Void, Error> {
+    fatalError()
   }
 }
 
