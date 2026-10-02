@@ -12,16 +12,6 @@ import Foundation
 /// and ``httpHeaderFields`` encode JSON and use POST; when ``Request`` is
 /// ``Void``, the body is omitted and GET defaults apply.
 public protocol Endpoint: Sendable {
-  /// The type of the response body.
-  ///
-  /// Default is `Void`.
-  associatedtype Response = Void
-
-  /// The type of the request body.
-  ///
-  /// Default is `Void`.
-  associatedtype Request = Void
-
   /// The type decoded from non-2xx response bodies into ``HTTPError/payload``.
   ///
   /// Omit the typealias to keep ``HTTPErrorPayload`` (`error` + `message`). The
@@ -30,6 +20,16 @@ public protocol Endpoint: Sendable {
   /// `typealias FailurePayload` for an API-specific body (for example GitHub’s
   /// nested `errors` array).
   associatedtype FailurePayload: Decodable & Sendable = HTTPErrorPayload
+
+  /// The type of the request body.
+  ///
+  /// Default is `Void`.
+  associatedtype Request = Void
+
+  /// The type of the response body.
+  ///
+  /// Default is `Void`.
+  associatedtype Response = Void
 
   /// The HTTP header fields.
   var httpHeaderFields: [String: String] { get }
