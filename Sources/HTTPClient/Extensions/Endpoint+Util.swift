@@ -23,8 +23,8 @@ extension Endpoint {
     Logger.shared.logResponse(httpResponse, data: data, for: request)
 
     guard httpResponse.isOK else {
-      throw HTTPError(
-        payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: data),
+      throw HTTPError<FailurePayload>(
+        payload: try? JSONDecoder().decode(FailurePayload.self, from: data),
         statusCode: httpResponse.statusCode
       )
     }

@@ -22,6 +22,12 @@ public protocol Endpoint: Sendable {
   /// Default is `Void`.
   associatedtype Request = Void
 
+  /// The type decoded from non-2xx response bodies into ``HTTPError/payload``.
+  ///
+  /// Default is ``HTTPErrorPayload`` (`error` + `message`). API packages supply
+  /// their own shape (e.g. GitHub’s nested `errors` array).
+  associatedtype FailurePayload: Decodable & Sendable = HTTPErrorPayload
+
   /// The HTTP header fields.
   var httpHeaderFields: [String: String] { get }
 
