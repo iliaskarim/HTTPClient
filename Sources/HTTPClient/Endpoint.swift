@@ -24,8 +24,11 @@ public protocol Endpoint: Sendable {
 
   /// The type decoded from non-2xx response bodies into ``HTTPError/payload``.
   ///
-  /// Default is ``HTTPErrorPayload`` (`error` + `message`). API packages supply
-  /// their own shape (e.g. GitHub’s nested `errors` array).
+  /// Omit the typealias to keep ``HTTPErrorPayload`` (`error` + `message`).
+  /// The `= Type` default is the same associated-type syntax ``Request`` and
+  /// ``Response`` already use to default to `Void`. Declare
+  /// `typealias FailurePayload` for an API-specific body (for example GitHub’s
+  /// nested `errors` array).
   associatedtype FailurePayload: Decodable & Sendable = HTTPErrorPayload
 
   /// The HTTP header fields.
