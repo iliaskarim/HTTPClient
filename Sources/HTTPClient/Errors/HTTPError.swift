@@ -11,9 +11,4 @@ public struct HTTPError<Payload: Decodable & Sendable>: HTTPFailure, Sendable {
 
   /// The HTTP status code of the error response.
   public let statusCode: Int
-
-  public init(payload: Payload?, statusCode: Int) {
-    self.payload = payload
-    self.statusCode = statusCode
-  }
 }
