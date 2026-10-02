@@ -24,7 +24,7 @@ extension Endpoint {
 
     guard httpResponse.isOK else {
       throw HTTPError(
-        payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: data),
+        payload: try? JSONDecoder().decode(FailurePayload.self, from: data),
         statusCode: httpResponse.statusCode
       )
     }
