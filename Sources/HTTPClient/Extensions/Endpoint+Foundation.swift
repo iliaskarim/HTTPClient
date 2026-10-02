@@ -53,6 +53,40 @@ public extension Endpoint where Response == Void {
   func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws {
     _ = try await responseData(using: session, bearerToken: bearerToken)
   }
+
+  /// Execute the request, treating HTTP 404 as a successful negative.
+  ///
+  /// Use this for existence checks and idempotent deletes where the server
+  /// uses 404 to mean “already absent.” A 404 is not logged as an error.
+  ///
+  /// - Parameters:
+  ///   - session: The ``URLSession`` to use for the request. Defaults to the
+  ///     shared session.
+  ///   - bearerToken: An optional bearer token for the `Authorization`
+  ///     header.
+  /// - Returns: `true` on 2xx, `false` on 404.
+  /// - Throws: ``HTTPError`` if the status code is non-2xx (except 404),
+  ///   ``URLError`` for transport failures, or any error thrown from
+  ///   ``httpBody()``.
+  func responseTreatingNotFoundAsFalse(
+    using session: URLSession = .shared,
+    bearerToken: String? = nil
+  ) async throws -> Bool {
+    let request = try request(bearerToken: bearerToken)
+    do {
+      let (data, response) = try await session.data(for: request)
+      let httpResponse = try handleResponse(
+        data: data,
+        response: response,
+        request: request,
+        treatingNotFoundAsSuccess: true
+      )
+      return httpResponse.statusCode != 404
+    } catch {
+      Logger.shared.logError(error)
+      throw error
+    }
+  }
 }
 
 private extension Endpoint {
@@ -74,7 +108,12 @@ private extension Endpoint {
     let request = try request(bearerToken: bearerToken)
     do {
       let (data, response) = try await session.data(for: request)
-      try handleResponse(data: data, response: response, request: request)
+      try handleResponse(
+        data: data,
+        response: response,
+        request: request,
+        treatingNotFoundAsSuccess: false
+      )
       return data
     } catch {
       Logger.shared.logError(error)

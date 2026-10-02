@@ -8,26 +8,40 @@ extension Endpoint {
   /// non-2xx.
   ///
   /// Logs the response details and parses error payloads if available.
+  /// When ``treatingNotFoundAsSuccess`` is `true`, a 404 is accepted and
+  /// logged as a successful response rather than an error.
   ///
   /// - Parameters:
   ///   - data: The response body data.
   ///   - response: The HTTP response.
   ///   - request: The original request associated with the response.
-  /// - Throws: ``HTTPError`` for non-2xx status codes, ``URLError`` if the
+  ///   - treatingNotFoundAsSuccess: When `true`, HTTP 404 does not throw.
+  /// - Returns: The HTTP response when the status is accepted.
+  /// - Throws: ``HTTPError`` for non-2xx status codes (except 404 when
+  ///   ``treatingNotFoundAsSuccess`` is `true`), ``URLError`` if the
   ///   response is not a valid HTTP response.
-  func handleResponse(data: Data, response: URLResponse, request: URLRequest) throws {
+  @discardableResult
+  func handleResponse(
+    data: Data,
+    response: URLResponse,
+    request: URLRequest,
+    treatingNotFoundAsSuccess: Bool
+  ) throws -> HTTPURLResponse {
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
     }
 
-    Logger.shared.logResponse(httpResponse, data: data, for: request)
+    let isAccepted404 = treatingNotFoundAsSuccess && httpResponse.statusCode == 404
+    Logger.shared.logResponse(httpResponse, data: data, for: request, isAccepted404: isAccepted404)
 
-    guard httpResponse.isOK else {
+    guard httpResponse.isOK || isAccepted404 else {
       throw HTTPError(
         payload: try? JSONDecoder().decode(HTTPError.Payload.self, from: data),
         statusCode: httpResponse.statusCode
       )
     }
+
+    return httpResponse
   }
 
   /// Construct a ``URLRequest`` from the endpoint's properties.
