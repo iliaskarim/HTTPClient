@@ -33,6 +33,28 @@ public protocol ComponentEndpoint: Endpoint {
 }
 
 public extension ComponentEndpoint {
+  /// The URL assembled from the endpoint's URL components.
+  ///
+  /// Builds a ``URL`` from ``urlScheme``, ``urlHost``, ``urlPort``,
+  /// ``urlPath``, and ``urlQueryItems``.
+  ///
+  /// - Important: Traps if the components do not form a valid ``URL``.
+  var url: URL {
+    var components = URLComponents()
+    components.host = urlHost
+    components.port = urlPort
+    components.path = urlPath
+    components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
+      URLQueryItem(name: $0.key, value: $0.value)
+    }
+    components.scheme = urlScheme
+
+    guard let url = components.url else {
+      preconditionFailure("ComponentEndpoint properties do not form a valid URL")
+    }
+    return url
+  }
+
   /// The path component of the URL.
   ///
   /// Default is `"/"`.
@@ -59,27 +81,5 @@ public extension ComponentEndpoint {
   /// Default is `"https"`.
   var urlScheme: String {
     "https"
-  }
-
-  /// The URL assembled from the endpoint's URL components.
-  ///
-  /// Builds a ``URL`` from ``urlScheme``, ``urlHost``, ``urlPort``,
-  /// ``urlPath``, and ``urlQueryItems``.
-  ///
-  /// - Important: Traps if the components do not form a valid ``URL``.
-  var url: URL {
-    var components = URLComponents()
-    components.host = urlHost
-    components.port = urlPort
-    components.path = urlPath
-    components.queryItems = urlQueryItems.isEmpty ? nil : urlQueryItems.map {
-      URLQueryItem(name: $0.key, value: $0.value)
-    }
-    components.scheme = urlScheme
-
-    guard let url = components.url else {
-      preconditionFailure("ComponentEndpoint properties do not form a valid URL")
-    }
-    return url
   }
 }
