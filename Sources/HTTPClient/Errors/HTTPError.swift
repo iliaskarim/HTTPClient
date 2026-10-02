@@ -17,13 +17,3 @@ public struct HTTPError<Payload: Decodable & Sendable>: HTTPFailure, Sendable {
     self.statusCode = statusCode
   }
 }
-
-/// Status code for a non-2xx HTTP response.
-///
-/// Existential casting (`as? any HTTPFailure`) works across ``HTTPError``
-/// specializations so callers can handle status without knowing the payload
-/// type.
-public protocol HTTPFailure: Error {
-  /// The HTTP status code of the error response.
-  var statusCode: Int { get }
-}
