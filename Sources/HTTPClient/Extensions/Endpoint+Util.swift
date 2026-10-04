@@ -7,27 +7,41 @@ extension Endpoint {
   /// Validate an HTTP response and throw an ``HTTPError`` if the status code is
   /// non-2xx.
   ///
-  /// Logs the response details and parses error payloads if available.
+  /// Logs the response details and parses error payloads if available. When
+  /// ``treatingNotFoundAsSuccess`` is `true`, a 404 is accepted and logged as a
+  /// successful response rather than an error.
   ///
   /// - Parameters:
   ///   - data: The response body data.
   ///   - response: The HTTP response.
   ///   - request: The original request associated with the response.
-  /// - Throws: ``HTTPError`` for non-2xx status codes, ``URLError`` if the
-  ///   response is not a valid HTTP response.
-  func handleResponse(data: Data, response: URLResponse, request: URLRequest) throws {
+  ///   - treatingNotFoundAsSuccess: When `true`, HTTP 404 does not throw.
+  /// - Returns: The HTTP response when the status is accepted.
+  /// - Throws: ``HTTPError`` for non-2xx status codes (except 404 when
+  ///   ``treatingNotFoundAsSuccess`` is `true`), ``URLError`` if the response
+  ///   is not a valid HTTP response.
+  @discardableResult
+  func handleResponse(
+    data: Data,
+    response: URLResponse,
+    request: URLRequest,
+    treatingNotFoundAsSuccess: Bool
+  ) throws -> HTTPURLResponse {
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
     }
 
-    Logger.shared.logResponse(httpResponse, data: data, for: request)
+    let isAccepted404 = treatingNotFoundAsSuccess && httpResponse.statusCode == 404
+    Logger.shared.logResponse(httpResponse, data: data, for: request, isAccepted404: isAccepted404)
 
-    guard httpResponse.isOK else {
+    guard httpResponse.isOK || isAccepted404 else {
       throw HTTPError(
         payload: try? JSONDecoder().decode(FailurePayload.self, from: data),
         statusCode: httpResponse.statusCode
       )
     }
+
+    return httpResponse
   }
 
   /// Construct a ``URLRequest`` from the endpoint's properties.
@@ -37,8 +51,8 @@ extension Endpoint {
   ///
   /// Logs the request details.
   ///
-  /// - Parameter bearerToken: An optional bearer token for the
-  ///   `Authorization` header.
+  /// - Parameter bearerToken: An optional bearer token for the `Authorization`
+  ///   header.
   /// - Returns: A fully constructed ``URLRequest`` ready to be executed.
   /// - Throws: Any error thrown from ``httpBody()``.
   func request(bearerToken: String? = nil) throws -> URLRequest {

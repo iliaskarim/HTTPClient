@@ -43,6 +43,9 @@ public extension Endpoint where Response == Data {
 public extension Endpoint where Response == Void {
   /// Execute the request asynchronously and discard the response body.
   ///
+  /// To treat HTTP 404 as a successful `false`, conform to
+  /// ``TreatsNotFoundAsFalse`` instead.
+  ///
   /// - Parameters:
   ///   - session: The ``URLSession`` to use for the request. Defaults to the
   ///     shared session.
@@ -52,6 +55,45 @@ public extension Endpoint where Response == Void {
   ///   transport failures, or any error thrown from ``httpBody()``.
   func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws {
     _ = try await responseData(using: session, bearerToken: bearerToken)
+  }
+}
+
+public extension TreatsNotFoundAsFalse {
+  /// Execute the request, treating HTTP 404 as a successful negative.
+  ///
+  /// A 404 is not logged as an error.
+  ///
+  /// - Parameters:
+  ///   - session: The ``URLSession`` to use for the request. Defaults to the
+  ///     shared session.
+  ///   - bearerToken: An optional bearer token for the `Authorization`
+  ///     header.
+  /// - Returns: `true` on 2xx, `false` on 404.
+  /// - Throws: ``HTTPError`` if the status code is non-2xx (except 404),
+  ///   ``URLError`` for transport failures, or any error thrown from
+  ///   ``httpBody()``.
+  func response(using session: URLSession = .shared, bearerToken: String? = nil) async throws -> Bool {
+    let request = try request(bearerToken: bearerToken)
+    do {
+      let (data, response) = try await session.data(for: request)
+      let httpResponse = try handleResponse(
+        data: data,
+        response: response,
+        request: request,
+        treatingNotFoundAsSuccess: true
+      )
+      return httpResponse.statusCode != 404
+    } catch {
+      Logger.shared.logError(error)
+      throw error
+    }
+  }
+
+  /// The inherited Void ``Endpoint/response(using:bearerToken:)`` is
+  /// unavailable so a discarded result cannot throw on 404.
+  @available(*, unavailable, message: "Assign the Bool result of response().")
+  func response(using _: URLSession = .shared, bearerToken _: String? = nil) async throws {
+    fatalError()
   }
 }
 
@@ -74,7 +116,12 @@ private extension Endpoint {
     let request = try request(bearerToken: bearerToken)
     do {
       let (data, response) = try await session.data(for: request)
-      try handleResponse(data: data, response: response, request: request)
+      try handleResponse(
+        data: data,
+        response: response,
+        request: request,
+        treatingNotFoundAsSuccess: false
+      )
       return data
     } catch {
       Logger.shared.logError(error)
