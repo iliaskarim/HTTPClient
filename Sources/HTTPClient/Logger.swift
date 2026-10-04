@@ -79,7 +79,7 @@ final class Logger: Sendable {
     case let urlError as URLError:
       logErrorMessage("Transport error: \(urlError.localizedDescription)")
 
-    case is HTTPError:
+    case is any HTTPFailure:
       break // already logged in logResponse
 
     default:

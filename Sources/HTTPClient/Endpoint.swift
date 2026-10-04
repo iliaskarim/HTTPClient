@@ -12,15 +12,20 @@ import Foundation
 /// and ``httpHeaderFields`` encode JSON and use POST; when ``Request`` is
 /// ``Void``, the body is omitted and GET defaults apply.
 public protocol Endpoint: Sendable {
-  /// The type of the response body.
+  /// The type decoded from non-2xx response bodies into ``HTTPError/payload``.
   ///
-  /// Default is `Void`.
-  associatedtype Response = Void
+  /// Default is ``HTTPErrorPayload``.
+  associatedtype FailurePayload: Decodable & Sendable = HTTPErrorPayload
 
   /// The type of the request body.
   ///
   /// Default is `Void`.
   associatedtype Request = Void
+
+  /// The type of the response body.
+  ///
+  /// Default is `Void`.
+  associatedtype Response = Void
 
   /// The HTTP header fields.
   var httpHeaderFields: [String: String] { get }

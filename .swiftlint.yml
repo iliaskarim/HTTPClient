@@ -26,8 +26,6 @@ opt_in_rules:
 # `swiftlint lint` and the Ubuntu Lint workflow do not run them.
 # Run `bash scripts/swiftlint-analyze` (`clean build-for-testing`).
 # unused_declaration defaults to error; keep it a warning.
-# SourceKit misses `appDelegate` (protocol dispatch; #3763). That
-# site uses `// swiftlint:disable:this unused_declaration`.
 analyzer_rules:
   - unused_declaration
   - unused_import
@@ -53,7 +51,6 @@ non_optional_string_data_conversion:
 
 excluded:
   - .build
-  - GitHubAPI/.build
   - Packages
   - Package.swift
   - build
