@@ -84,7 +84,7 @@ struct NotFoundResponseTests {
   @Test
   func treatingNotFoundAsFalseThrowsOnOtherClientError() async {
     StubURLProtocol.setResponse(statusCode: 403)
-    await #expect(throws: HTTPError.self) {
+    await #expect(throws: HTTPError<HTTPErrorPayload>.self) {
       try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
     }
   }
@@ -92,7 +92,7 @@ struct NotFoundResponseTests {
   @Test
   func voidResponseThrowsOn404() async {
     StubURLProtocol.setResponse(statusCode: 404)
-    await #expect(throws: HTTPError.self) {
+    await #expect(throws: HTTPError<HTTPErrorPayload>.self) {
       try await VoidEndpoint().response(using: stubSession())
     }
   }
@@ -103,7 +103,7 @@ struct NotFoundResponseTests {
     do {
       _ = try await VoidEndpoint().responseTreatingNotFoundAsFalse(using: stubSession())
       Issue.record("Expected HTTPError")
-    } catch let error as HTTPError {
+    } catch let error as HTTPError<HTTPErrorPayload> {
       #expect(error.statusCode == 500)
     } catch {
       Issue.record("Expected HTTPError, got \(error)")

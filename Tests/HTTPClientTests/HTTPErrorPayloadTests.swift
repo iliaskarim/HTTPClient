@@ -49,7 +49,12 @@ func testOmittedFailurePayloadUsesHTTPErrorPayload() throws {
   )
 
   do {
-    try endpoint.handleResponse(data: data, response: response, request: URLRequest(url: url))
+    try endpoint.handleResponse(
+      data: data,
+      response: response,
+      request: URLRequest(url: url),
+      treatingNotFoundAsSuccess: false
+    )
     Issue.record("Expected a non-2xx response to throw")
   } catch let error as HTTPError<HTTPErrorPayload> {
     #expect(error.statusCode == 404)
@@ -74,7 +79,12 @@ func testFailurePayloadTypealiasOverridesDefault() throws {
   )
 
   do {
-    try endpoint.handleResponse(data: data, response: response, request: URLRequest(url: url))
+    try endpoint.handleResponse(
+      data: data,
+      response: response,
+      request: URLRequest(url: url),
+      treatingNotFoundAsSuccess: false
+    )
     Issue.record("Expected a non-2xx response to throw")
   } catch let error as HTTPError<CustomFailure> {
     #expect(error.statusCode == 422)
