@@ -6,6 +6,7 @@ A lightweight Swift package providing a generic, protocol-driven HTTP client. It
 
 * Define endpoints by conforming to `Endpoint` with a finished `URL`.
 * Conform to `ComponentEndpoint` when the URL should be assembled from host, path, port, query, and scheme.
+* Conform to `TreatsNotFoundAsFalse` on Void endpoints so `response()` returns `true` on 2xx and `false` on 404.
 * Automatic construction of `URLRequest` from endpoint properties.
 * Async/await support for executing requests on Apple platforms and Linux.
 * Combine publisher support for executing requests on Apple platforms.
@@ -90,6 +91,24 @@ Async/await:
 
 ```swift
 let user: User = try await UserEndpoint(userID: 42).response()
+```
+
+For existence checks and idempotent deletes, conform to `TreatsNotFoundAsFalse`. `response()` returns `true` on 2xx and `false` on 404 instead of throwing `HTTPError`:
+
+```swift
+struct HeadUserEndpoint: ComponentEndpoint, TreatsNotFoundAsFalse {
+    var urlHost: String {
+        "api.example.com"
+    }
+
+    var urlPath: String {
+        "/users/\(userID)"
+    }
+
+    let userID: Int
+}
+
+let exists = try await HeadUserEndpoint(userID: 42).response()
 ```
 
 Combine:

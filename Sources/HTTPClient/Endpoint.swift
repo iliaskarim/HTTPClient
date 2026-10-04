@@ -7,6 +7,8 @@ import Foundation
 ///
 /// Provide a finished ``url`` when the caller already has one. To build a URL
 /// from host, path, port, query, and scheme, conform to ``ComponentEndpoint``.
+/// For existence checks and idempotent deletes that treat HTTP 404 as a
+/// successful `false`, conform to ``TreatsNotFoundAsFalse``.
 ///
 /// When ``Request`` is ``Encodable``, default ``httpBody()``, ``httpMethod``,
 /// and ``httpHeaderFields`` encode JSON and use POST; when ``Request`` is
