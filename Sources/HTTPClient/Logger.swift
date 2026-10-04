@@ -119,8 +119,8 @@ final class Logger: Sendable {
   /// Emit details about an incoming ``HTTPURLResponse``.
   ///
   /// - Error level: unexpected non-2xx status code and URL via
-  ///   ``logErrorMessage(_:)`` (`stdout`, plus ``os.Logger`` on Apple
-  ///   platforms or `stderr` on Linux). An accepted 404 is not an error.
+  ///   ``logErrorMessage(_:)`` (`stdout`, plus ``os.Logger`` on Apple platforms
+  ///   or `stderr` on Linux). An accepted 404 is not an error.
   /// - Info level: 2xx status code and URL to `stdout` (and accepted 404s)
   /// - Debug level: response body when non-empty
   /// - Trace level: response headers

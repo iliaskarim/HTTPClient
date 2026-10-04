@@ -17,8 +17,8 @@ public extension Endpoint where Response: Decodable {
   ///     header.
   /// - Returns: A publisher that emits the decoded response body or fails with
   ///   ``HTTPError`` if the status code is non-2xx, ``URLError`` for transport
-  ///   failures, a decoding error if the response body cannot be decoded as
-  ///   the expected type, or any error thrown from ``httpBody()``.
+  ///   failures, a decoding error if the response body cannot be decoded as the
+  ///   expected type, or any error thrown from ``httpBody()``.
   func responsePublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
@@ -60,8 +60,8 @@ public extension Endpoint where Response == Void {
   ///     shared session.
   ///   - bearerToken: An optional bearer token for the `Authorization`
   ///     header.
-  /// - Returns: A publisher that emits `()` or fails with ``HTTPError`` if
-  ///   the status code is non-2xx, ``URLError`` for transport failures, or any
+  /// - Returns: A publisher that emits `()` or fails with ``HTTPError`` if the
+  ///   status code is non-2xx, ``URLError`` for transport failures, or any
   ///   error thrown from ``httpBody()``.
   func responsePublisher(
     using session: URLSession = .shared,
@@ -84,8 +84,8 @@ public extension TreatsNotFoundAsFalse {
   ///   - bearerToken: An optional bearer token for the `Authorization`
   ///     header.
   /// - Returns: A publisher that emits `true` on 2xx and `false` on 404, or
-  ///   fails with ``HTTPError`` for any other non-2xx status, ``URLError``
-  ///   for transport failures, or any error thrown from ``httpBody()``.
+  ///   fails with ``HTTPError`` for any other non-2xx status, ``URLError`` for
+  ///   transport failures, or any error thrown from ``httpBody()``.
   func responsePublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
@@ -142,8 +142,8 @@ private extension Endpoint {
   ///   - bearerToken: An optional bearer token for the `Authorization`
   ///     header.
   /// - Returns: A publisher that emits the raw response data or fails with
-  ///   ``HTTPError`` if the status code is non-2xx, ``URLError`` for
-  ///   transport failures, or any error thrown from ``httpBody()``.
+  ///   ``HTTPError`` if the status code is non-2xx, ``URLError`` for transport
+  ///   failures, or any error thrown from ``httpBody()``.
   func responseDataPublisher(
     using session: URLSession = .shared,
     bearerToken: String? = nil
