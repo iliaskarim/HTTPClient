@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Suite
 struct ISO8601DateEncodingStrategyTests {
   @Test
   func testISO8601DateEncodingStrategy() {

@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Suite
 struct SnakeCaseKeyEncodingStrategyTests {
   @Test
   func testSnakeCaseKeyEncodingStrategy() {

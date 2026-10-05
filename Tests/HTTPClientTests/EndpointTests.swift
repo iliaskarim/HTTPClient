@@ -5,7 +5,6 @@ import FoundationNetworking
 import Testing
 @testable import HTTPClient
 
-@Suite
 struct EndpointTests {
   @Test
   func testFinishedURLEndpointPreservesURL() throws {
