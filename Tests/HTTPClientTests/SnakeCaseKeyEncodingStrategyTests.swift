@@ -2,16 +2,19 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Test
-func testSnakeCaseKeyEncodingStrategy() {
-  let encoder = JSONEncoder()
-  SnakeCaseKeyEncodingStrategy.shared.apply(to: encoder)
-  let isSnakeCase = switch encoder.keyEncodingStrategy {
-  case .convertToSnakeCase:
-    true
+@Suite
+struct SnakeCaseKeyEncodingStrategyTests {
+  @Test
+  func testSnakeCaseKeyEncodingStrategy() {
+    let encoder = JSONEncoder()
+    SnakeCaseKeyEncodingStrategy.shared.apply(to: encoder)
+    let isSnakeCase = switch encoder.keyEncodingStrategy {
+    case .convertToSnakeCase:
+      true
 
-  default:
-    false
+    default:
+      false
+    }
+    #expect(isSnakeCase)
   }
-  #expect(isSnakeCase)
 }

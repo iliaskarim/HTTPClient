@@ -2,16 +2,19 @@ import Foundation
 import Testing
 @testable import HTTPClient
 
-@Test
-func testISO8601DateEncodingStrategy() {
-  let encoder = JSONEncoder()
-  ISO8601DateEncodingStrategy.shared.apply(to: encoder)
-  let isISO8601 = switch encoder.dateEncodingStrategy {
-  case .iso8601:
-    true
+@Suite
+struct ISO8601DateEncodingStrategyTests {
+  @Test
+  func testISO8601DateEncodingStrategy() {
+    let encoder = JSONEncoder()
+    ISO8601DateEncodingStrategy.shared.apply(to: encoder)
+    let isISO8601 = switch encoder.dateEncodingStrategy {
+    case .iso8601:
+      true
 
-  default:
-    false
+    default:
+      false
+    }
+    #expect(isISO8601)
   }
-  #expect(isISO8601)
 }
