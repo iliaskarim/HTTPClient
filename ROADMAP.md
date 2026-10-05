@@ -1,6 +1,6 @@
 # HTTPClient roadmap
 
-This document outlines planned evolution of the package. **1.0** shipped the endpoint-first API. **2.0** is the breaking URL-first split: `Endpoint` requires a finished `URL`, and `ComponentEndpoint` owns host / path / port / query / scheme. **3.0** adds an optional execution context for shared configuration, authentication, and error hooks, without taking over concerns that belong in API packages (base URLs, path conventions) or apps (Keychain, UI session state).
+This document outlines planned evolution of the package. **1.0** shipped the endpoint-first API. **2.0** shipped the breaking URL-first split: `Endpoint` requires a finished `URL`, and `ComponentEndpoint` owns host / path / port / query / scheme. **3.0** makes `HTTPError` generic over each endpoint's failure body via `FailurePayload`. **4.0** adds an optional execution context for shared configuration, authentication, and error hooks, without taking over concerns that belong in API packages (base URLs, path conventions) or apps (Keychain, UI session state).
 
 ## 1.0 (shipped)
 
@@ -14,7 +14,7 @@ Stable, endpoint-driven API:
 
 `JSONRequestEndpoint` was merged into `Endpoint` (`Request` associated type + defaults for encodable bodies). This is the breaking change that justified 1.0.
 
-## 2.0 (current)
+## 2.0 (shipped)
 
 Breaking protocol split so finished-URL callers and piece-based REST callers no longer share the same required surface.
 
@@ -22,7 +22,18 @@ Breaking protocol split so finished-URL callers and piece-based REST callers no 
 - `ComponentEndpoint` owns `urlHost`, `urlPath`, `urlPort`, `urlQueryItems`, and `urlScheme`, with a default `url` that assembles them.
 - `request()` builds `URLRequest` from `url` instead of reassembling from pieces.
 
-## 3.0 (planned)
+## 3.0 (current)
+
+Typed non-2xx bodies so each endpoint can decode its own error JSON without baking API-specific shapes into HTTPClient.
+
+- `Endpoint.FailurePayload` (default `HTTPErrorPayload`) is the type decoded into `HTTPError.payload`.
+- `HTTPError` is generic over that payload (`HTTPError<Payload>`).
+- The previous nested `HTTPError.Payload` (`error` + `message`) is the public default type `HTTPErrorPayload`.
+- `HTTPFailure` exposes `statusCode` so callers can cast `as? any HTTPFailure` without knowing the payload specialization.
+
+Endpoints that omit `FailurePayload` keep the `{ error, message }` body. An API with its own error JSON sets `typealias FailurePayload`.
+
+## 4.0 (planned)
 
 Introduce a small **coordinator type** (working name `Client`, alternatives `APIClient` or `Session`) that owns shared request context and centralizes execution. Endpoints remain the primary abstraction. The coordinator is optional sugar for apps that today wrap every call (e.g., `UserSession.response(for:)` + manual `bearerToken` threading).
 
@@ -32,7 +43,7 @@ Introduce a small **coordinator type** (working name `Client`, alternatives `API
 - Own a **`URLSession`** instance for testing and configuration.
 - Invoke **`onHTTPError`** / **`onUnauthorized`** hooks so apps can react to non-2xx responses (logout, refresh, analytics) without reimplementing try/catch around every call.
 - Provide **`response(for:)`** (and Combine equivalents) mirroring today’s `Endpoint` extensions.
-- Keep **2.x call sites working**: `Endpoint.response(bearerToken:)` remains available. Migration is opt-in.
+- Keep **3.x call sites working**: `Endpoint.response(bearerToken:)` remains available. Migration is opt-in.
 
 ### Out of scope for HTTPClient
 
@@ -54,15 +65,15 @@ public struct Client: Sendable {
   public var session: URLSession
   public var bearerToken: String?
   /// Called for every non-2xx response after ``HTTPError`` is constructed.
-  public var onHTTPError: (@Sendable (HTTPError) -> Void)?
-  /// Called when ``HTTPError``.``statusCode`` is 401 (convenience over filtering in ``onHTTPError``).
-  public var onUnauthorized: (@Sendable (HTTPError) -> Void)?
+  public var onHTTPError: (@Sendable (any HTTPFailure) -> Void)?
+  /// Called when ``HTTPFailure``.``statusCode`` is 401 (convenience over filtering in ``onHTTPError``).
+  public var onUnauthorized: (@Sendable (any HTTPFailure) -> Void)?
 
   public init(
     session: URLSession = .shared,
     bearerToken: String? = nil,
-    onHTTPError: (@Sendable (HTTPError) -> Void)? = nil,
-    onUnauthorized: (@Sendable (HTTPError) -> Void)? = nil
+    onHTTPError: (@Sendable (any HTTPFailure) -> Void)? = nil,
+    onUnauthorized: (@Sendable (any HTTPFailure) -> Void)? = nil
   )
 
   public func response<E: Endpoint>(for endpoint: E) async throws -> E.Response
@@ -96,19 +107,19 @@ let client = Client(
 let user = try await client.response(for: FetchCurrentUserDetailEndpoint())
 ```
 
-### Optional follow-ups (3.0 or later)
+### Optional follow-ups (4.0 or later)
 
 - **`bearerToken` as `@Sendable () -> String?`** for refresh flows without recreating the client.
 - **Default URL components** on the client (host/scheme/port) merged with endpoint properties, for staging vs production without duplicating every endpoint. Not required if API packages keep host defaults (e.g., `GitHubEndpoint`).
-- **Deprecate** per-call `bearerToken` on `Endpoint.response` in favor of `Client` only if we want a single recommended style (soft deprecation in 3.0, removal in 4.0).
+- **Deprecate** per-call `bearerToken` on `Endpoint.response` in favor of `Client` only if we want a single recommended style (soft deprecation in 4.0, removal in 5.0).
 
 ### Migration (GitHubClient-shaped)
 
-| Today | After 3.0 |
+| Today | After 4.0 |
 |-------|-----------|
 | `GitHubEndpoint` provides `urlHost` | Unchanged (`ComponentEndpoint` in GitHubAPI) |
 | `UserSession.response(for:)` + 401 handling | Thin wrapper (Keychain + UI), delegating to `Client` |
-| `endpoint.response(bearerToken:)` | `client.response(for: endpoint)` or keep 2.x API |
+| `endpoint.response(bearerToken:)` | `client.response(for: endpoint)` or keep 3.x API |
 
 ## Versioning
 
@@ -116,8 +127,9 @@ let user = try await client.response(for: FetchCurrentUserDetailEndpoint())
 |---------|--------|
 | **1.0** | Stable `Endpoint`-first API, Linux and Apple, docs and logging |
 | **2.0** | URL-first `Endpoint` + `ComponentEndpoint` |
-| **3.0** | Optional `Client`, shared token/session, `onHTTPError` / `onUnauthorized` |
-| **4.0** | Only if we remove per-call `bearerToken` or make other breaking changes |
+| **3.0** | Generic `HTTPError` + `Endpoint.FailurePayload` |
+| **4.0** | Optional `Client`, shared token/session, `onHTTPError` / `onUnauthorized` |
+| **5.0** | Only if we remove per-call `bearerToken` or make other breaking changes |
 
 ## Open questions
 

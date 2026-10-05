@@ -10,7 +10,7 @@ A lightweight Swift package providing a generic, protocol-driven HTTP client. It
 * Async/await support for executing requests on Apple platforms and Linux.
 * Combine publisher support for executing requests on Apple platforms.
 * Configurable JSON encoder/decoder strategies via the `CustomEncodable`/`CustomDecodable` protocols.
-* Structured `HTTPError` payload handling.
+* Structured `HTTPError` payload handling, with per-endpoint `FailurePayload` typing.
 * Built-in logger with levels (`none`, `error`, `info`, `debug`, `trace`) controllable via `LOG_LEVEL` environment variable or Info.plist entry.
 
 ## Getting Started
@@ -19,7 +19,7 @@ Add the package to your project using Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iliaskarim/HTTPClient.git", from: "2.0.0")
+    .package(url: "https://github.com/iliaskarim/HTTPClient.git", from: "3.0.0")
 ]
 ```
 
@@ -130,6 +130,18 @@ Request/response details and bodies are written to stdout. On Apple platforms, e
 ## Documentation
 
 API documentation is available at [httpclient.iliaskarim.org](https://httpclient.iliaskarim.org/).
+
+## Migrating from 2.x
+
+3.0 is a breaking release. `HTTPError` is generic over the body decoded from a non-2xx response. Each endpoint chooses that type with `FailurePayload` (default `HTTPErrorPayload`).
+
+| 2.x | 3.0 |
+|-----|-----|
+| `HTTPError` | `HTTPError<HTTPErrorPayload>` for the old `{ error, message }` shape |
+| `HTTPError.Payload` | `HTTPErrorPayload` |
+| `is HTTPError` / `as? HTTPError` | `is any HTTPFailure` / `as? any HTTPFailure`, or `HTTPError<ConcretePayload>` |
+
+Endpoints that omit `FailurePayload` keep the default body. An API with its own error JSON sets `typealias FailurePayload`.
 
 ## Migrating from 1.x
 
