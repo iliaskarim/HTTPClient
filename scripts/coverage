@@ -76,4 +76,8 @@ fi
 "${llvm_cov[@]}" report "${cov_args[@]}"
 "${llvm_cov[@]}" show "${cov_args[@]}" "${show_args[@]}"
 
+# Linux CI runs this script as root inside Docker. upload-artifact cannot
+# read a directory that is not world-accessible.
+chmod -R a+rX "$out"
+
 echo "Wrote ${out}/index.html"
