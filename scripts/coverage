@@ -60,12 +60,20 @@ if [[ -n "$demangler" ]]; then
   cov_args+=("-Xdemangler=${demangler}")
 fi
 
-"${llvm_cov[@]}" report "${cov_args[@]}"
-"${llvm_cov[@]}" show "${cov_args[@]}" \
-  -format=html \
-  -output-dir="$out" \
-  -project-title=HTTPClient \
-  -show-directory-coverage \
+show_args=(
+  -format=html
+  -output-dir="$out"
+  -project-title=HTTPClient
   -show-line-counts-or-regions
+)
+# Swift 6.0's llvm-cov rejects -show-directory-coverage. Use it when present
+# so newer toolchains still write a per-directory index.
+help="$("${llvm_cov[@]}" show --help 2>&1 || true)"
+if [[ "$help" == *"show-directory-coverage"* ]]; then
+  show_args+=(-show-directory-coverage)
+fi
+
+"${llvm_cov[@]}" report "${cov_args[@]}"
+"${llvm_cov[@]}" show "${cov_args[@]}" "${show_args[@]}"
 
 echo "Wrote ${out}/index.html"
